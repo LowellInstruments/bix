@@ -29,42 +29,51 @@
       <widget class="QWidget" name="page_1">
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout">
+         <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1">
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1">
-            <item>
-             <widget class="QLabel" name="label">
-              <property name="text">
-               <string>Logger type to scan for</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="sb_logger_type">
-              <property name="currentText">
-               <string/>
-              </property>
-              <property name="maxVisibleItems">
-               <number>3</number>
-              </property>
-              <property name="placeholderText">
-               <string/>
-              </property>
-              <property name="duplicatesEnabled">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-           </layout>
+           <widget class="QPushButton" name="btn_connect">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>100</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Connect</string>
+            </property>
+           </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1">
+           <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,1">
             <item>
-             <widget class="QPushButton" name="btn_connect">
-              <property name="text">
-               <string>Connect</string>
-              </property>
-             </widget>
+             <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1">
+              <item>
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string>Logger type to scan for</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="sb_logger_type">
+                <property name="currentText">
+                 <string/>
+                </property>
+                <property name="maxVisibleItems">
+                 <number>3</number>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+                <property name="duplicatesEnabled">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
             <item>
              <widget class="QListView" name="lst_known_macs"/>
@@ -78,7 +87,7 @@
       <widget class="QWidget" name="page_2">
        <layout class="QHBoxLayout" name="horizontalLayout_6">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1,1,1">
+         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1,0,1,1">
           <item>
            <widget class="QLabel" name="label_2">
             <property name="text">
@@ -90,7 +99,17 @@
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,1,1,1">
+            <item>
+             <widget class="QLabel" name="lbl_type">
+              <property name="text">
+               <string>TYPE</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
             <item>
              <widget class="QLabel" name="lbl_sn">
               <property name="text">
@@ -115,6 +134,63 @@
              <widget class="QLabel" name="lbl_gfv">
               <property name="text">
                <string>GFV</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="1,1,1,1,1">
+            <item>
+             <widget class="QPushButton" name="btn_sensors">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>100</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>get sensors</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_gst">
+              <property name="text">
+               <string>GST</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_gsp">
+              <property name="text">
+               <string>GSP</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_acc">
+              <property name="text">
+               <string>ACC</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_gsc">
+              <property name="text">
+               <string>GSC</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
