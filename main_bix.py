@@ -189,6 +189,11 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.threadpool.start(w)
 
 
+    def on_click_btn_test(self):
+        v = self.lst_known_macs.currentIndex
+        print(v.)
+
+
     def __init__(self):
         super(Bix, self).__init__()
         self.setupUi(self)
@@ -208,6 +213,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_connect.clicked.connect(self.on_click_btn_connect)
         self.btn_disconnect.clicked.connect(self.on_click_btn_disconnect)
         self.btn_sensors.clicked.connect(self.on_click_btn_sensors)
+        self.btn_test.clicked.connect(self.on_click_btn_test)
 
         # populate select boxes
         self.sb_logger_type.addItem('TDO')

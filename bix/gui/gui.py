@@ -30,6 +30,10 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.btn_test = QtWidgets.QPushButton(parent=self.page_1)
+        self.btn_test.setMinimumSize(QtCore.QSize(0, 100))
+        self.btn_test.setObjectName("btn_test")
+        self.horizontalLayout_3.addWidget(self.btn_test)
         self.btn_connect = QtWidgets.QPushButton(parent=self.page_1)
         self.btn_connect.setMinimumSize(QtCore.QSize(0, 100))
         self.btn_connect.setObjectName("btn_connect")
@@ -60,6 +64,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.addLayout(self.verticalLayout_3)
         self.horizontalLayout_3.setStretch(0, 1)
         self.horizontalLayout_3.setStretch(1, 1)
+        self.horizontalLayout_3.setStretch(2, 1)
         self.horizontalLayout_4.addLayout(self.horizontalLayout_3)
         self.pages.addWidget(self.page_1)
         self.page_2 = QtWidgets.QWidget()
@@ -141,12 +146,13 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
-        self.pages.setCurrentIndex(1)
+        self.pages.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.btn_test.setText(_translate("MainWindow", "TEST"))
         self.btn_connect.setText(_translate("MainWindow", "Connect"))
         self.label.setText(_translate("MainWindow", "Logger type to scan for"))
         self.label_2.setText(_translate("MainWindow", "Connected to logger"))
