@@ -439,7 +439,7 @@ profiling</string>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="btn_gcf_2">
+               <widget class="QPushButton" name="btn_beh">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
@@ -528,14 +528,14 @@ BEH</string>
           <item>
            <widget class="QFrame" name="frame">
             <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
+             <enum>QFrame::NoFrame</enum>
             </property>
             <property name="frameShadow">
              <enum>QFrame::Raised</enum>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_2">
              <item>
-              <widget class="QLabel" name="label">
+              <widget class="QLabel" name="lbl_table">
                <property name="text">
                 <string>Table &lt;name&gt; contents</string>
                </property>

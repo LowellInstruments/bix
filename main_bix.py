@@ -11,10 +11,10 @@ from PyQt6.QtWidgets import (
     QListWidgetItem
 )
 
-from bix.constants import PATH_ALIAS_FILE, mac_test
+from bix.constants import PATH_ALIAS_FILE, mac_test, RVN_SCC_4, FOL_BIL
 from bix.gui.gui import Ui_MainWindow
 import setproctitle
-from bix.gui.populate import populate_cal_table, FOL_BIL
+from bix.gui.populate import populate_cal_table
 from ble.ble import *
 from ble.ble_linux import ble_linux_disconnect_by_mac
 import toml
@@ -37,28 +37,12 @@ class WorkerSignals(QObject):
     sensors = pyqtSignal(object)
     status = pyqtSignal(str)
     done = pyqtSignal()
+    gcc = pyqtSignal(object)
+    gcf = pyqtSignal(object)
 
 
 
 class Worker(QRunnable):
-
-    def __init__(self, operation, *args, **kwargs):
-        super().__init__()
-        d = {
-            'wb_connect': self.wb_connect,
-            'wb_disconnect': self.wb_disconnect,
-            'wb_sensors': self.wb_sensors,
-            'wb_run': self.wb_run,
-            'wb_stop': self.wb_stp,
-            'wb_sts': self.wb_sts,
-            'wb_frm': self.wb_frm,
-            'wb_led': self.wb_led
-        }
-        self.fn = d[operation]
-        self.args = args
-        self.kwargs = kwargs
-        self.signals = WorkerSignals()
-
 
     def _ser(self, e: str):
         self.signals.error.emit(f'error {e}')
@@ -93,30 +77,6 @@ class Worker(QRunnable):
         d['sn'] = v['SN']
         self.signals.info.emit(d)
         self.signals.connected.emit()
-        if d['glt'] not in ('TDO', 'CTD'):
-            return
-        # todo: avoid repeating code like in sensors
-        d = {}
-        rv, v = await cmd_gst()
-        if rv:
-            self._ser('gst')
-            return
-        d['gst'] = v
-        rv, v = await cmd_gsp()
-        if rv:
-            self._ser('gsp')
-            return
-        d['gsp'] = v
-        rv, v = await cmd_bat()
-        if rv:
-            self._ser('bat')
-            return
-        d['bat'] = v
-        # todo: do accelerometer
-        d['acc'] = 'N/A'
-        self.signals.sensors.emit(d)
-        self.signals.done.emit()
-
 
 
     async def wb_disconnect(self):
@@ -173,6 +133,7 @@ class Worker(QRunnable):
             self._ser('frm')
         self.signals.done.emit()
 
+
     async def wb_led(self):
         rv = await cmd_led()
         if rv:
@@ -203,15 +164,58 @@ class Worker(QRunnable):
         self.signals.done.emit()
 
 
+    async def wb_gcc(self):
+        rv, s = await cmd_gcc()
+        if rv:
+            self._ser('gcc')
+            return
+        self.signals.gcc.emit(s)
+        self.signals.done.emit()
+
+
+    async def wb_gcf(self):
+        rv, s = await cmd_gcf()
+        if rv:
+            self._ser('gcf')
+            return
+        self.signals.gcf.emit(s)
+        self.signals.done.emit()
+
+
 
     @pyqtSlot()
     def run(self):
-        global g_busy
-        g_busy = True
-        print("thread start")
-        loop.run_until_complete(self.fn())
-        print("thread complete")
-        g_busy = False
+        for fn in self.ls_fn:
+            global g_busy
+            g_busy = True
+            print("thread start")
+            loop.run_until_complete(fn())
+            print("thread complete")
+            g_busy = False
+
+
+    def __init__(self, ls_op, *args, **kwargs):
+        super().__init__()
+        d = {
+            'wb_connect': self.wb_connect,
+            'wb_disconnect': self.wb_disconnect,
+            'wb_sensors': self.wb_sensors,
+            'wb_run': self.wb_run,
+            'wb_stop': self.wb_stp,
+            'wb_sts': self.wb_sts,
+            'wb_frm': self.wb_frm,
+            'wb_led': self.wb_led,
+            'wb_gcc': self.wb_gcc,
+            'wb_gcf': self.wb_gcf,
+        }
+        self.ls_fn = []
+        if type(ls_op) is str:
+            ls_op = [ls_op]
+        for i in ls_op:
+            self.ls_fn.append(d[i])
+        self.args = args
+        self.kwargs = kwargs
+        self.signals = WorkerSignals()
 
 
 
@@ -269,6 +273,75 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.lbl_sts.setText(s)
 
 
+    def slot_signal_gcc(self, s):
+        print('rxed gcc', s)
+        self.lbl_table.setText('Table calibration contents')
+        s = s[6:]
+        d = {
+            # 15000: '7VZ<2'
+            # 1: '5C`_6'
+            # 0: '!!!!!'
+            "RVN": RVN_SCC_4,
+            "TMO": 0,
+            "TMR": 15000,
+            "TMA": 1,
+            "TMB": 0,
+            "TMC": 0,
+            "TMD": 0,
+            "AXX": 1,
+            "AXY": 0,
+            "AXZ": 0,
+            "AXV": 0,
+            "AXC": 0,
+            "AYX": 0,
+            "AYY": 1,
+            "AYZ": 0,
+            "AYV": 0,
+            "AYC": 0,
+            "AZX": 0,
+            "AZY": 0,
+            "AZZ": 1,
+            "AZV": 0,
+            "AZC": 0,
+            "TMX": 0,
+            "TMY": 0,
+            "TMZ": 0,
+            "PRA": 1,
+            "PRB": 0,
+            "PRC": "+0000",
+            "PRD": "+0000",
+            "DCO": 0,
+            "NCO": 0,
+            "DHU": 0,
+            "DCD": 0,
+        }
+        for i, v in enumerate(d.items()):
+            k, _ = v
+            d[k] = s[(i * 5):(i * 5) + 5]
+        populate_cal_table(self, d)
+
+
+    def slot_signal_gcf(self, s):
+        print('rxed gcf', s)
+        self.lbl_table.setText('Table profile contents')
+        s = s[6:]
+        d = {
+            # order must match firmware
+            'RVN': RVN_SCC_4,
+            'PFM': 0,
+            'SPN': 0,
+            'SPT': 0,
+            'DRO': 0,
+            'DRU': 0,
+            'DRF': 0,
+            'DSO': 0,
+            'DSU': 0,
+        }
+        for i, k, _ in enumerate(d.items()):
+            d[k] = s[(i * 5):(i * 5) + 5]
+        populate_cal_table(self, d)
+
+
     def slot_signal_connected(self):
         self.pages.setCurrentIndex(1)
         print('GUI connected')
@@ -303,14 +376,25 @@ class Bix(QMainWindow, Ui_MainWindow):
         print(f'ACC {v}')
 
 
-
     # -------------------
     # GUI button clicks
     # -------------------
 
+    # def _create_worker(self, s):
+    #     w = Worker(s)
+    #     w.signals.connected.connect(self.slot_signal_connected)
+    #     w.signals.info.connect(self.slot_signal_info)
+    #     w.signals.sensors.connect(self.slot_signal_sensors)
+    #     w.signals.done.connect(self.slot_signal_done)
+    #     w.signals.disconnected.connect(self.slot_signal_disconnected)
+    #     w.signals.error.connect(self.slot_signal_error)
+    #     w.signals.status.connect(self.slot_signal_status)
+    #     w.signals.gcc.connect(self.slot_signal_gcc)
+    #     w.signals.gcf.connect(self.slot_signal_gcf)
+    #     self.threadpool.start(w)
 
-    def _create_worker(self, s):
-        w = Worker(s)
+    def _create_worker(self, ls_s):
+        w = Worker(ls_s)
         w.signals.connected.connect(self.slot_signal_connected)
         w.signals.info.connect(self.slot_signal_info)
         w.signals.sensors.connect(self.slot_signal_sensors)
@@ -318,8 +402,9 @@ class Bix(QMainWindow, Ui_MainWindow):
         w.signals.disconnected.connect(self.slot_signal_disconnected)
         w.signals.error.connect(self.slot_signal_error)
         w.signals.status.connect(self.slot_signal_status)
+        w.signals.gcc.connect(self.slot_signal_gcc)
+        w.signals.gcf.connect(self.slot_signal_gcf)
         self.threadpool.start(w)
-        return w
 
 
     def on_click_lst_known_macs(self):
@@ -330,8 +415,14 @@ class Bix(QMainWindow, Ui_MainWindow):
 
     @dec_is_busy
     def on_click_btn_connect(self, _):
-        self.lbl_connect.setText(f'connecting {g_mac}')
-        self._create_worker('wb_connect')
+        if g_mac == mac_test():
+            self.lbl_connect.setText(f'connecting hard-coded {g_mac}')
+        else:
+            self.lbl_connect.setText(f'connecting {g_mac}')
+        self._create_worker([
+            'wb_connect',
+            'wb_sensors',
+            'wb_gcc'])
 
 
     @dec_is_busy
@@ -342,7 +433,6 @@ class Bix(QMainWindow, Ui_MainWindow):
     @dec_is_busy
     def on_click_btn_sensors(self, _):
         self._create_worker('wb_sensors')
-
 
 
     @dec_is_busy
@@ -369,6 +459,15 @@ class Bix(QMainWindow, Ui_MainWindow):
     def on_click_btn_led(self, _):
         self._create_worker('wb_led')
 
+
+    @dec_is_busy
+    def on_click_btn_gcc(self, _):
+        self._create_worker('wb_gcc')
+
+
+    @dec_is_busy
+    def on_click_btn_gcf(self, _):
+        self._create_worker('wb_gcf')
 
 
     def __init__(self):
@@ -398,12 +497,9 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_import_macs.clicked.connect(self.open_dialog_import_macs)
         self.lst_known_macs.itemClicked.connect(self.on_click_lst_known_macs)
         self.btn_led.clicked.connect(self.on_click_btn_led)
+        self.btn_gcc.clicked.connect(self.on_click_btn_gcc)
+        self.btn_gcf.clicked.connect(self.on_click_btn_gcf)
 
-
-        # create empty GCC table
-        d_scc = {'TMR': (9, 985)}
-        populate_cal_table(self, d_scc)
-        # populate_gcf_table(self, d_scf)
 
         # be sure we are disconnected
         # todo: remove this
@@ -412,9 +508,6 @@ class Bix(QMainWindow, Ui_MainWindow):
         # import macs list
         self._load_file_logger_aliases()
         self.lst_known_macs.clearSelection()
-
-
-
 
 
 
