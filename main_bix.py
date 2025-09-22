@@ -3,19 +3,27 @@ from PyQt6.QtCore import (
     QThreadPool, QObject,
     pyqtSignal, QRunnable, pyqtSlot,
 )
-from PyQt6.QtGui import QScreen, QStandardItemModel, QStandardItem
-from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem
+from PyQt6.QtGui import QScreen
+from PyQt6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QFileDialog,
+    QListWidgetItem
+)
 from bix.gui.gui import Ui_MainWindow
 import setproctitle
-from bix.gui.populate import populate_cal_table
+from bix.gui.populate import populate_cal_table, FOL_BIL
 from ble.ble import *
 from ble.ble_linux import ble_linux_disconnect_by_mac
 
 
 
+g_mac = 'aaaa'
 g_busy = False
-loop = asyncio.get_event_loop()
 MAC_TEST = "D0:2E:AB:D9:29:48"
+# todo: manage python versions here
+loop = asyncio.get_event_loop()
+
 
 
 
@@ -49,6 +57,7 @@ class Worker(QRunnable):
 
 
     async def wb_connect(self):
+        print('g_mac', g_mac)
         rv = await connect_by_mac(MAC_TEST)
         if rv == 0:
             self._ser('connecting')
@@ -140,8 +149,6 @@ class Bix(QMainWindow, Ui_MainWindow):
     def slot_signal_connected(self):
         self.pages.setCurrentIndex(1)
         print('GUI connected')
-        v = self.sb_logger_type.currentText()
-        self.frame.setVisible(v in ('TDO', 'CTD'))
 
 
     def slot_signal_disconnected(self):
@@ -153,7 +160,9 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.lbl_sn.setText(d['sn'])
         self.lbl_mac.setText(d['mac'])
         self.lbl_gfv.setText(d['gfv'])
-        self.lbl_type.setText(d['glt'])
+        glt = d['glt']
+        self.lbl_type.setText(glt)
+        self.tbl_gcc.setVisible(glt in ('TDO', 'CTD'))
 
 
     def slot_signal_sensors(self, d: dict):
@@ -163,7 +172,12 @@ class Bix(QMainWindow, Ui_MainWindow):
         v = str(d['gsp'])
         self.lbl_gsp.setText(str(v))
         print(f'GSP {v}')
-
+        v = str(d['bat'])
+        self.lbl_bat.setText(str(v))
+        print(f'BAT {v}')
+        v = str(d['acc'])
+        self.lbl_acc.setText(str(v))
+        print(f'ACC {v}')
 
 
 
@@ -177,6 +191,8 @@ class Bix(QMainWindow, Ui_MainWindow):
         w.signals.connected.connect(self.slot_signal_connected)
         w.signals.info.connect(self.slot_signal_info)
         w.signals.sensors.connect(self.slot_signal_sensors)
+        global g_mac
+        g_mac = 'pepa'
         self.threadpool.start(w)
 
 
@@ -197,8 +213,30 @@ class Bix(QMainWindow, Ui_MainWindow):
     def on_click_btn_test(self):
         v = self.lst_known_macs.currentItem().text()
         print(v)
-        self.tbl_gcc.clear()
         self.pages.setCurrentIndex(1)
+
+
+    def open_dialog_import_macs(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            'Select file with MAC list',
+            FOL_BIL,
+            'TOML Files (*.toml)'
+        )
+
+
+        # import the MAC file content
+        _it = QListWidgetItem(f'error: importing file {str(path)}')
+        self.lst_known_macs.clear()
+        if not path:
+            self.lst_known_macs.addItem(_it)
+            return
+        try:
+            with open(path, 'r') as f:
+                # todo: read toml
+                ll = f.read()
+        except (Exception, ):
+            self.lst_known_macs.addItem(_it)
 
 
     def __init__(self):
@@ -222,11 +260,6 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_sensors.clicked.connect(self.on_click_btn_sensors)
         self.btn_test.clicked.connect(self.on_click_btn_test)
 
-        # populate select boxes
-        self.sb_logger_type.addItem('TDO')
-        self.sb_logger_type.addItem('CTD')
-        self.sb_logger_type.addItem('DOX')
-
         # populate MAC list view
         self.lst_known_macs.addItem('mac1')
         self.lst_known_macs.addItem('mac2')
@@ -236,8 +269,23 @@ class Bix(QMainWindow, Ui_MainWindow):
         populate_cal_table(self, d_scc)
         # populate_gcf_table(self, d_scf)
 
+        # CSS stuff
+        self.setStyleSheet("""
+        QProgressBar {
+         height: 50px;
+        }
+        QProgressBar::chunk {
+         height: 50px;
+        }
+        """)
+
         # be sure we are disconnected
+        # todo: remove this
         ble_linux_disconnect_by_mac(MAC_TEST)
+
+        # import macs list
+        self.btn_import_macs.clicked.connect(self.open_dialog_import_macs)
+
 
 
 

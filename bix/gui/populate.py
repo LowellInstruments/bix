@@ -1,4 +1,10 @@
+import pathlib
 from PyQt6.QtWidgets import QTableWidgetItem
+
+
+
+FOL_BIL = str(pathlib.Path.home() / 'Downloads/dl_bil_v5')
+
 
 
 def populate_cal_table(app, d):
