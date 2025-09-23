@@ -9,7 +9,7 @@ from PyQt6.QtGui import QScreen, QMovie
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
-    QFileDialog,
+    QFileDialog, QMessageBox,
 )
 
 from bix.utils import (
@@ -24,7 +24,7 @@ from ble.ble import *
 from ble.ble_linux import ble_linux_disconnect_by_mac
 import toml
 
-
+from lix.lix import parse_file_lid_v5
 
 os.makedirs(FOL_BIL, exist_ok=True)
 g_mac = mac_test()
@@ -48,6 +48,12 @@ class Worker(QRunnable):
             return
         print('DIR d', d)
         n = len(d)
+
+        if n == 0:
+            self.signals.download.emit('no files')
+            self.signals.done.emit()
+            return
+
         for i, name_size in enumerate(d.items()):
             name, size = name_size
             rv = await cmd_dwg(name)
@@ -66,6 +72,15 @@ class Worker(QRunnable):
             with open(dst_filename, 'wb') as f:
                 f.write(data)
             time.sleep(1)
+
+            # convert
+            # todo: maybe as thread?
+            if dst_filename.endswith('.lid'):
+                bn = os.path.basename(dst_filename)
+                print(f'BIX converting {bn}')
+                parse_file_lid_v5(dst_filename)
+
+        self.signals.done.emit()
 
 
     async def wb_connect(self):
@@ -445,17 +460,7 @@ class Bix(QMainWindow, Ui_MainWindow):
             self.lbl_gst.setVisible(True)
             self.lbl_gsp.setVisible(True)
             self.lbl_acc.setVisible(True)
-        if v == 'CTD':
-            self.lbl_gsc.setVisible(True)
-        if v.startswith('DO'):
-            self.lbl_gdo.setVisible(True)
 
-        v = str(d['bat'])
-        s = f'{v} mV'
-        self.lbl_bat.setText(s)
-        print(f'BAT {v}')
-
-        if v in ('TDO', 'CTD'):
             v = str(d['gst'])
             s = f'Temperature\n\n{v}\n\nCelsius'
             self.lbl_gst.setText(s)
@@ -471,13 +476,8 @@ class Bix(QMainWindow, Ui_MainWindow):
             self.lbl_acc.setText(s)
             print(f'ACC {v}')
 
-        if v.startswith('DO'):
-            v = str(d['gdo'])
-            s = f'DOC\n\n{v}\n\nmg/l'
-            self.lbl_gdo.setText(s)
-            print(f'GDO {v}')
-
         if v == 'CTD':
+            self.lbl_gsc.setVisible(True)
             v = d['gsc']
             print(f'GSC {v}')
             v = v.decode()
@@ -492,7 +492,18 @@ class Bix(QMainWindow, Ui_MainWindow):
             s = f'Conductivity\nV12 {c0}\nV21 {c1}\nC21 {c2}\nC12 {c3}\n'
             self.lbl_gsc.setText(s)
 
+        if v.startswith('DO'):
+            self.lbl_gdo.setVisible(True)
+            v = str(d['gdo'])
+            s = f'DOC\n\n{v}\n\nmg/l'
+            self.lbl_gdo.setText(s)
+            print(f'GDO {v}')
 
+
+        v = str(d['bat'])
+        s = f'{v} mV'
+        self.lbl_bat.setText(s)
+        print(f'BAT {v}')
 
 
 
@@ -585,7 +596,15 @@ class Bix(QMainWindow, Ui_MainWindow):
 
     @dec_gui_busy
     def on_click_btn_frm(self, _):
-        self.wrk('wb_frm')
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Are you sure?")
+        dlg.setText("This deletes all files in  logger!")
+        dlg.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        dlg.setIcon(QMessageBox.Icon.Question)
+        if dlg.exec() == QMessageBox.StandardButton.Yes:
+            self.wrk('wb_frm')
 
 
     @dec_gui_busy
