@@ -211,6 +211,12 @@ class Worker(QRunnable):
 
 class Bix(QMainWindow, Ui_MainWindow):
 
+    @staticmethod
+    def _get_version():
+        d = toml.load('pyproject.toml')
+        return d['project']['version']
+
+
     def on_click_btn_test(self):
         self.pages.setCurrentIndex(1)
 
@@ -417,6 +423,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         geo.moveCenter(center)
         self.setFixedWidth(1024)
         self.setFixedHeight(768)
+        self.lbl_gui_version.setText('v' + self._get_version())
 
         # async stuff
         self.threadpool = QThreadPool()

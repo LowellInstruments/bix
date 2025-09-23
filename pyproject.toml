@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "bix"
+version = "0.1"
+description = "New BIL for Lowell Instruments"
+dependencies = [
+    "bleak",
+    "https://github.com/LowellInstruments/ble.git",
+    "PyQt6",
+    "setproctitle"
+]
