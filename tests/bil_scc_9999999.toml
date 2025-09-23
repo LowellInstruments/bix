@@ -1,0 +1,53 @@
+# The SCC command in BIL will write the values below to the logger.
+# If you do not wish to modify a given value, you can delete the corresponding line
+
+
+[calibration]
+RVN = "00004"
+TMO = "!!!!!"
+TMR = "7VZ<2"
+TMA = "3g?gQ"
+TMB = "3HFKd"
+TMC = "1S#M`"
+TMD = "1ps%'"
+AXX = "5C`_6"
+AXY = "!!!!!"
+AXZ = "!!!!!"
+AXV = "!!!!!"
+AXC = "!!!!!"
+AYX = "!!!!!"
+AYY = "5C`_6"
+AYZ = "!!!!!"
+AYV = "!!!!!"
+AYC = "!!!!!"
+AZX = "!!!!!"
+AZY = "!!!!!"
+AZZ = "5C`_6"
+AZV = "!!!!!"
+AZC = "!!!!!"
+TMX = "!!!!!"
+TMY = "!!!!!"
+TMZ = "!!!!!"
+# PRA and PRB can be expressed in 2 ways:
+#     - using a floating point format with just digits, no quotes
+#         PRA = 1.128934571598247
+#     - or, also as ascii85, with quotes
+#         PRA = "5ELE`"
+PRA = 1.11
+PRB = 0.0011
+# PRC and PRD have special format, with quotes, including sign:
+#     PRC = "-1234". This corresponds to the number -12.34
+PRC = "-0500"
+PRD = "+2500"
+# DCO (static backup threshold for submersion)
+# NCO (static threshold for emergence)
+# DHU (PRF Fast Profiling hysteresis)
+# DCD (Diff submersion criterion)
+# they are done in natural format, with quotes, no sign.
+# They are all values in terms of counts (DCO and NCO) or Counts/unit time (DHU and DCD).
+DCO = "01000"
+NCO = "00500"
+DHU = "00005"
+DCD = "00005"
+# must match with the logger MAC when using BIL
+MAC = "D0:2E:AB:D9:29:48"

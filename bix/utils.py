@@ -1,6 +1,8 @@
 import asyncio
 import pathlib
 from PyQt6.QtCore import QObject, pyqtSignal
+import numpy as np
+from math import floor
 
 
 
@@ -10,6 +12,17 @@ FOL_BIL = str(pathlib.Path.home() / 'Downloads/dl_bil_v5')
 # todo: manage python versions here
 loop = asyncio.get_event_loop()
 # loop = asyncio.new_event_loop()
+
+
+
+def mac_test():
+    # mt = "D0:2E:AB:D9:29:48"  # TDO bread
+    # mt = "F0:5E:CD:25:92:F1"  # TDO 2508700 *
+    # mt = "F0:5E:CD:25:A1:16"    # TDO 2508701
+    # mt = "F0:5E:CD:25:92:9D"    # TDO 2508702
+    mt = "F0:5E:CD:25:95:D4"    # CTD
+    # mt = "F0:5E:CD:25:92:EA" # CTD_JED
+    return mt
 
 
 
@@ -24,6 +37,7 @@ class WorkerSignals(QObject):
     done = pyqtSignal()
     gcc = pyqtSignal(object)
     gcf = pyqtSignal(object)
+    download = pyqtSignal(str)
 
 
 
@@ -86,9 +100,30 @@ def create_calibration_dictionary():
 
 
 
-def mac_test():
-    mt = "D0:2E:AB:D9:29:48"  # TDO bread
-    # mt = "F0:5E:CD:25:92:F1"  # TDO 2508700 *
-    # mt = "F0:5E:CD:25:A1:16"    # TDO 2508701
-    # mt = "F0:5E:CD:25:92:9D"    # TDO 2508702
-    return mt
+
+def num_to_ascii85(in_num):
+    n = np.array(in_num, dtype='<f4')
+    n.dtype = '<u4'
+    chars = []
+    for i in range(4, -1, -1):
+        chars.append(floor((n / 85 ** i) + 33))
+        n = n % 85 ** i
+    return ''.join([chr(c) for c in chars])
+
+
+def ascii85_to_num(in_str):
+    assert len(in_str) == 5, 'in_str must be exactly five characters.'
+    num = np.array([0], dtype='<u4')
+    chars = [c for c in in_str]
+    for i, c in enumerate(chars):
+        num = num + (ord(c) - 33) * 85 ** (4-i)
+    num.dtype = '<f4'
+    return num.item()
+
+
+if __name__ == '__main__':
+    n = 0
+    a = num_to_ascii85(n)
+    print(f'n {n} a {a}')
+    n = ascii85_to_num(a)
+    print(f'n {n} a {a}')

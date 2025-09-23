@@ -1,0 +1,29 @@
+[behavior]
+
+
+# -----------------------------------------------------------
+# behavior file to configure logger w/o re-flashing firmware
+# default values are in parentheses
+# -----------------------------------------------------------
+
+
+# revision number (4)
+RVN = 4
+
+# use a separate thread to save data (1)
+TTS = 0
+
+# skip compensate pressure with temperature (0)
+STC = 0
+
+# advertise faster for a few minutes when just out of water (1)
+FOW = 0
+
+# extra safe NOR memory saving, slower power-on (1)
+NMS = 1
+
+# detect out of water via detecting BLE (0)
+OWB = 0
+
+
+BCU = 1

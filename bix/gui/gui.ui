@@ -157,7 +157,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="4,3">
           <item>
-           <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,2,1,1,1,1,1">
+           <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,1,1,1,1,1,1">
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_13">
               <item>
@@ -181,9 +181,14 @@
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="lbl_gui_busy">
+               <widget class="QLabel" name="lbl_busy">
+                <property name="font">
+                 <font>
+                  <pointsize>15</pointsize>
+                 </font>
+                </property>
                 <property name="text">
-                 <string>-</string>
+                 <string>done</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -193,56 +198,126 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_14" stretch="1,1,1,1,1">
+             <layout class="QHBoxLayout" name="horizontalLayout_14" stretch="0,0,0,0,0">
               <item>
-               <widget class="QLabel" name="lbl_type">
-                <property name="text">
-                 <string>TYPE</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
+               <layout class="QVBoxLayout" name="verticalLayout_6">
+                <item>
+                 <widget class="QLabel" name="label">
+                  <property name="text">
+                   <string>Model</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_glt">
+                  <property name="text">
+                   <string>MODEL</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
-               <widget class="QLabel" name="lbl_sn">
-                <property name="text">
-                 <string>SN</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
+               <layout class="QVBoxLayout" name="verticalLayout_7">
+                <item>
+                 <widget class="QLabel" name="label_2">
+                  <property name="text">
+                   <string>Serial Number</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_sn">
+                  <property name="text">
+                   <string>SN</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
-               <widget class="QLabel" name="lbl_mac">
-                <property name="text">
-                 <string>MAC</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
+               <layout class="QVBoxLayout" name="verticalLayout_8">
+                <item>
+                 <widget class="QLabel" name="label_3">
+                  <property name="text">
+                   <string>MAC Address</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_mac">
+                  <property name="text">
+                   <string>MAC</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
-               <widget class="QLabel" name="lbl_gfv">
-                <property name="text">
-                 <string>GFV</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
+               <layout class="QVBoxLayout" name="verticalLayout_9">
+                <item>
+                 <widget class="QLabel" name="label_4">
+                  <property name="text">
+                   <string>Firmware</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_gfv">
+                  <property name="text">
+                   <string>GFV</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
-               <widget class="QLabel" name="lbl_bat">
-                <property name="text">
-                 <string>BAT</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
+               <layout class="QVBoxLayout" name="verticalLayout_10">
+                <item>
+                 <widget class="QLabel" name="label_5">
+                  <property name="text">
+                   <string>Battery mV</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_bat">
+                  <property name="text">
+                   <string>BAT</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
             </item>
@@ -290,7 +365,7 @@
               <item>
                <widget class="QLabel" name="lbl_sts">
                 <property name="text">
-                 <string>STS</string>
+                 <string>-</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -329,54 +404,74 @@ sensors</string>
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="lbl_gst">
-                <property name="text">
-                 <string>GST</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
+               <layout class="QVBoxLayout" name="verticalLayout_11">
+                <item>
+                 <widget class="QLabel" name="lbl_gst">
+                  <property name="text">
+                   <string>GST</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
-               <widget class="QLabel" name="lbl_gsp">
-                <property name="text">
-                 <string>GSP</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
+               <layout class="QVBoxLayout" name="verticalLayout_12">
+                <item>
+                 <widget class="QLabel" name="lbl_gsp">
+                  <property name="text">
+                   <string>GSP</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
-               <widget class="QLabel" name="lbl_acc">
-                <property name="text">
-                 <string>ACC</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
+               <layout class="QVBoxLayout" name="verticalLayout_13">
+                <item>
+                 <widget class="QLabel" name="lbl_acc">
+                  <property name="text">
+                   <string>GSA</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
-               <widget class="QLabel" name="lbl_gsc">
-                <property name="text">
-                 <string>GSC</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
+               <layout class="QVBoxLayout" name="verticalLayout_14">
+                <item>
+                 <widget class="QLabel" name="lbl_gsc">
+                  <property name="text">
+                   <string>GSC</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
-               <widget class="QLabel" name="lbl_gdo">
-                <property name="text">
-                 <string>GDO</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
+               <layout class="QVBoxLayout" name="verticalLayout_15">
+                <item>
+                 <widget class="QLabel" name="lbl_gdo">
+                  <property name="text">
+                   <string>GDO</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
             </item>
@@ -480,10 +575,13 @@ BEH</string>
                 <property name="text">
                  <string>file x of y</string>
                 </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
                </widget>
               </item>
               <item>
-               <widget class="QProgressBar" name="progressBar_2">
+               <widget class="QProgressBar" name="progressBar">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
@@ -511,17 +609,34 @@ BEH</string>
              </layout>
             </item>
             <item>
-             <widget class="QPushButton" name="btn_disconnect">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>100</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>disconnect</string>
-              </property>
-             </widget>
+             <layout class="QHBoxLayout" name="horizontalLayout_8">
+              <item>
+               <widget class="QPushButton" name="btn_disconnect">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>100</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>disconnect</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_mts">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>100</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>MTS</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
            </layout>
           </item>
