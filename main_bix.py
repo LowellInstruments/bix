@@ -74,6 +74,7 @@ class Worker(QRunnable):
         if rv == 0:
             self._ser('connecting')
             return
+        self.signals.connected.emit()
 
         d = {}
         rv, v = await cmd_glt()
@@ -104,7 +105,6 @@ class Worker(QRunnable):
         d['sn'] = v['SN']
 
         self.signals.info.emit(d)
-        self.signals.connected.emit()
         self.signals.done.emit()
 
 
@@ -349,6 +349,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         p, _ = QFileDialog.getOpenFileName(self, s, FOL_BIL, 'TOML Files (*.toml)')
         bn = os.path.basename(p)
         try:
+            print(f'trying to load TOML file {bn}')
             return toml.load(p)
         except (Exception, ) as e:
             self.lst_known_macs.addItem(f'error: opening TOML file {bn} -> {e}')
@@ -454,39 +455,46 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.lbl_bat.setText(s)
         print(f'BAT {v}')
 
-        v = str(d['gst'])
-        s = f'Temperature\n\n{v}\n\nCelsius'
-        self.lbl_gst.setText(s)
-        print(f'GST {v}')
+        if v in ('TDO', 'CTD'):
+            v = str(d['gst'])
+            s = f'Temperature\n\n{v}\n\nCelsius'
+            self.lbl_gst.setText(s)
+            print(f'GST {v}')
 
-        v = str(d['gsp'])
-        s = f'Pressure\n\n{v}\n\ndbar'
-        self.lbl_gsp.setText(s)
-        print(f'GSP {v}')
+            v = str(d['gsp'])
+            s = f'Pressure\n\n{v}\n\ndbar'
+            self.lbl_gsp.setText(s)
+            print(f'GSP {v}')
 
-        v = str(d['acc'])
-        s = f'Accelerometer\n\n{v}'
-        self.lbl_acc.setText(s)
-        print(f'ACC {v}')
+            v = str(d['acc'])
+            s = f'Accelerometer\n\n{v}'
+            self.lbl_acc.setText(s)
+            print(f'ACC {v}')
 
-        v = str(d['gdo'])
-        s = f'DOC\n\n{v}\n\nmg/l'
-        self.lbl_gdo.setText(s)
-        print(f'GDO {v}')
+        if v.startswith('DO'):
+            v = str(d['gdo'])
+            s = f'DOC\n\n{v}\n\nmg/l'
+            self.lbl_gdo.setText(s)
+            print(f'GDO {v}')
 
-        v = d['gsc']
-        print(f'GSC {v}')
-        v = v.decode()
-        c0 = v[2:4] + v[0:2]
-        c1 = v[6:8] + v[4:6]
-        c2 = v[10:12] + v[8:10]
-        c3 = v[14:16] + v[12:14]
-        c0 = int(c0, 16)
-        c1 = int(c1, 16)
-        c2 = int(c2, 16)
-        c3 = int(c3, 16)
-        s = f'Conductivity\nV12 {c0}\nV21 {c1}\nC21 {c2}\nC12 {c3}\n'
-        self.lbl_gsc.setText(s)
+        if v == 'CTD':
+            v = d['gsc']
+            print(f'GSC {v}')
+            v = v.decode()
+            c0 = v[2:4] + v[0:2]
+            c1 = v[6:8] + v[4:6]
+            c2 = v[10:12] + v[8:10]
+            c3 = v[14:16] + v[12:14]
+            c0 = int(c0, 16)
+            c1 = int(c1, 16)
+            c2 = int(c2, 16)
+            c3 = int(c3, 16)
+            s = f'Conductivity\nV12 {c0}\nV21 {c1}\nC21 {c2}\nC12 {c3}\n'
+            self.lbl_gsc.setText(s)
+
+
+
+
 
     # -------------------
     # GUI button clicks
@@ -663,6 +671,8 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.setFixedWidth(1024)
         self.setFixedHeight(768)
         self.lbl_gui_version.setText('v' + self._get_version())
+        if os.path.exists(DEV_SHM_DL_PROGRESS):
+            os.unlink(DEV_SHM_DL_PROGRESS)
         self.progressBar.setValue(0)
         self.lbl_download.setText('')
 
@@ -700,7 +710,6 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.timer_cb)
         self.timer.start(1000)
-
 
 
 
