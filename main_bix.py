@@ -293,7 +293,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.lbl_gfv.setText(d['gfv'])
         glt = d['glt']
         self.lbl_type.setText(glt)
-        self.tbl_gcc.setVisible(glt in ('TDO', 'CTD'))
+        self.table.setVisible(glt in ('TDO', 'CTD'))
 
 
     def slot_signal_sensors(self, d: dict):
@@ -326,7 +326,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         return wrapper
 
 
-    def _create_worker(self, ls_s):
+    def wrk(self, ls_s):
         # calls constructor in Worker class and bind its signals
         w = Worker(ls_s)
         w.signals.connected.connect(self.slot_signal_connected)
@@ -355,7 +355,7 @@ class Bix(QMainWindow, Ui_MainWindow):
             self.lbl_connect.setText(f'connecting hard-coded {g_mac}')
         else:
             self.lbl_connect.setText(f'connecting {g_mac}')
-        self._create_worker([
+        self.wrk([
             'wb_connect',
             'wb_sensors',
             'wb_gcc'])
@@ -363,47 +363,47 @@ class Bix(QMainWindow, Ui_MainWindow):
 
     @dec_gui_busy
     def on_click_btn_disconnect(self, _):
-        self._create_worker('wb_disconnect')
+        self.wrk('wb_disconnect')
 
 
     @dec_gui_busy
     def on_click_btn_sensors(self, _):
-        self._create_worker('wb_sensors')
+        self.wrk('wb_sensors')
 
 
     @dec_gui_busy
     def on_click_btn_run(self, _):
-        self._create_worker('wb_run')
+        self.wrk('wb_run')
 
 
     @dec_gui_busy
     def on_click_btn_stop(self, _):
-        self._create_worker('wb_stop')
+        self.wrk('wb_stop')
 
 
     @dec_gui_busy
     def on_click_btn_sts(self, _):
-        self._create_worker('wb_sts')
+        self.wrk('wb_sts')
 
 
     @dec_gui_busy
     def on_click_btn_frm(self, _):
-        self._create_worker('wb_frm')
+        self.wrk('wb_frm')
 
 
     @dec_gui_busy
     def on_click_btn_led(self, _):
-        self._create_worker('wb_led')
+        self.wrk('wb_led')
 
 
     @dec_gui_busy
     def on_click_btn_gcc(self, _):
-        self._create_worker('wb_gcc')
+        self.wrk('wb_gcc')
 
 
     @dec_gui_busy
     def on_click_btn_gcf(self, _):
-        self._create_worker('wb_gcf')
+        self.wrk('wb_gcf')
 
 
     def __init__(self):
