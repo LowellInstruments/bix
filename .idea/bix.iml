@@ -7,7 +7,6 @@
     <orderEntry type="jdk" jdkName="Python 3.10 (bix)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="ble" />
-    <orderEntry type="module" module-name="bil" />
     <orderEntry type="module" module-name="lix" />
   </component>
 </module>

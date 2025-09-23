@@ -23,8 +23,9 @@ from bix.gui.tables import fill_calibration_table, fill_profile_table
 from ble.ble import *
 from ble.ble_linux import ble_linux_disconnect_by_mac
 import toml
-
 from lix.lix import parse_file_lid_v5
+
+
 
 os.makedirs(FOL_BIL, exist_ok=True)
 g_mac = mac_test()
