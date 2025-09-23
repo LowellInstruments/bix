@@ -4,7 +4,9 @@ from PyQt6.QtWidgets import QTableWidgetItem, QHeaderView
 
 
 
-def populate_cal_table(app, d):
+def _populate_table(app, d, title):
+
+    app.lbl_table.setText(f'{title} table')
     app.tbl_gcc.clear()
     app.tbl_gcc.setColumnCount(3)
     app.tbl_gcc.setHorizontalHeaderLabels(['a', 'b', 'c'])
@@ -28,3 +30,13 @@ def populate_cal_table(app, d):
     h.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
     h.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
     h.setDefaultAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+
+
+
+
+def fill_calibration_table(app, d):
+    return _populate_table(app, d, 'Calibration')
+
+
+def fill_profile_table(app, d):
+    return _populate_table(app, d, 'Profile')
