@@ -9,6 +9,7 @@ from math import floor
 PATH_ALIAS_FILE = pathlib.Path.home() / 'Downloads' / 'bil_v2_logger_aliases.toml'
 RVN_SCC_4 = "00004"
 FOL_BIL = str(pathlib.Path.home() / 'Downloads/dl_bil_v5')
+DEF_ALIASES_FILE_PATH = f'{FOL_BIL}/bil_v5_logger_aliases.toml'
 # todo: manage python versions here
 loop = asyncio.get_event_loop()
 # loop = asyncio.new_event_loop()

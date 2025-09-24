@@ -1,6 +1,7 @@
 import os
 
 import pandas as pd
+from PyQt6 import QtGui
 from PyQt6.QtCore import (
     QThreadPool,
     QRunnable, pyqtSlot, QTimer,
@@ -16,7 +17,7 @@ from pyqtgraph import DateAxisItem
 from bix.utils import (
     mac_test,
     FOL_BIL, loop, WorkerSignals,
-    create_profile_dictionary, create_calibration_dictionary, num_to_ascii85
+    create_profile_dictionary, create_calibration_dictionary, num_to_ascii85, DEF_ALIASES_FILE_PATH
 )
 from bix.gui.gui import Ui_MainWindow
 import setproctitle
@@ -756,10 +757,10 @@ class Bix(QMainWindow, Ui_MainWindow):
             self.progressBar.setValue(0)
 
         # animated busy
-        if g_busy:
+        s = self.lbl_busy.text().split(' ')[0]
+        if g_busy and 'done' not in s:
             v = (int(time.time()) % 3) + 1
-            s = self.lbl_busy.text()
-            self.lbl_busy.setText(s + ('.' * v))
+            self.lbl_busy.setText(s + ' ' + ('.' * v))
 
         # always on correct tab
         if not is_connected():
@@ -768,14 +769,12 @@ class Bix(QMainWindow, Ui_MainWindow):
                 self.pages.setCurrentIndex(0)
 
 
+
     def __init__(self):
         super(Bix, self).__init__()
         self.setupUi(self)
         self.setWindowTitle("BIX")
         self.threadpool = QThreadPool()
-        center = QScreen.availableGeometry(QApplication.primaryScreen()).center()
-        geo = self.frameGeometry()
-        geo.moveCenter(center)
         self.setFixedWidth(1024)
         self.setFixedHeight(768)
         self.lbl_gui_version.setText('v' + self._get_version())
@@ -828,6 +827,25 @@ class Bix(QMainWindow, Ui_MainWindow):
         # what to show upon boot
         self.pages.setCurrentIndex(0)
         self.tabs.setCurrentIndex(0)
+
+
+        # auto-import MAC file
+        self.lst_known_macs.clear()
+        if os.path.exists(DEF_ALIASES_FILE_PATH):
+            print(f'auto-importing alias file {DEF_ALIASES_FILE_PATH}')
+            d = toml.load(DEF_ALIASES_FILE_PATH)
+            d = d['aliases']
+            for k, v in d.items():
+                self.lst_known_macs.addItem(f'{k} - {v}')
+
+
+        # uncomment when needed
+        self.btn_test.setVisible(False)
+
+
+        # move window
+        center = QtGui.QGuiApplication.primaryScreen().geometry().center()
+        self.move(center - self.rect().center())
 
 
 
