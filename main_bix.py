@@ -478,6 +478,7 @@ class Bix(QMainWindow, Ui_MainWindow):
     def slot_signal_connected(self):
         self.pages.setCurrentIndex(1)
         print('GUI connected')
+        self.lbl_connecting.setText('')
 
 
     def slot_signal_disconnected(self):
@@ -598,9 +599,9 @@ class Bix(QMainWindow, Ui_MainWindow):
     @dec_gui_busy
     def on_click_btn_connect(self, _):
         if g_mac == mac_test():
-            self.lbl_connect.setText(f'connecting hard-coded {g_mac}')
+            self.lbl_connecting.setText(f'connecting hard-coded {g_mac}')
         else:
-            self.lbl_connect.setText(f'connecting {g_mac}')
+            self.lbl_connecting.setText(f'connecting {g_mac}')
         self.wrk([
             'wb_connect',
             'wb_sensors',
