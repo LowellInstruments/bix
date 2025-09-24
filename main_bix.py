@@ -377,6 +377,8 @@ class MyPlotWidget(pg.PlotWidget):
         print('clicked plot 0x{:x}, event: {}'.format(id(self), mouseClickEvent))
         ev = mouseClickEvent
         print('x = {}'.format(self.mapToView(ev.pos()).x()))
+        ts = self.mapToView(ev.pos()).x()
+        print(f't = {datetime.fromtimestamp(ts)}')
         print('y = {}'.format(self.mapToView(ev.pos()).y()))
 
 
