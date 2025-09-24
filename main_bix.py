@@ -1,9 +1,12 @@
 import os
 
 import sys
+import plotly.graph_objects as go
+import numpy as np
+from PyQt6 import QtCore
 from PyQt6.QtCore import (
     QThreadPool,
-    QRunnable, pyqtSlot, QTimer,
+    QRunnable, pyqtSlot, QTimer, Qt,
 )
 from PyQt6.QtGui import QScreen, QMovie
 from PyQt6.QtWidgets import (
@@ -11,6 +14,7 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QFileDialog, QMessageBox,
 )
+from bokeh.io import save
 
 from bix.utils import (
     mac_test,
@@ -24,6 +28,17 @@ from ble.ble import *
 from ble.ble_linux import ble_linux_disconnect_by_mac
 import toml
 from lix.lix import parse_file_lid_v5
+from bokeh.plotting import figure
+from bokeh.resources import CDN
+from bokeh.embed import file_html
+from bokeh.plotting import figure, output_file, show
+import plotly.express as px
+import sys
+import matplotlib
+matplotlib.use('QtAgg')
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 
 
 
@@ -32,6 +47,15 @@ g_mac = mac_test()
 g_busy = False
 g_d = {}
 g_glt = ''
+
+
+
+class MplCanvas(FigureCanvasQTAgg):
+
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        super().__init__(fig)
 
 
 
@@ -678,12 +702,36 @@ class Bix(QMainWindow, Ui_MainWindow):
             self.lbl_busy.setText('busy' + ('.' * v))
 
 
+    def onclick(self, event):
+        print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
+              ('double' if event.dblclick else 'single', event.button,
+               event.x, event.y, event.xdata, event.ydata))
+        x = event.xdata
+        y = event.ydata
+        self.lbl_p_i = (self.lbl_p_i + 1) % 2
+        if self.lbl_p_i:
+            self.lbl_p1.setText(f'{int(event.xdata)} {event.ydata}')
+        else:
+            self.lbl_p2.setText(f'{int(event.xdata)} {event.ydata}')
+        if self.plt_ann:
+            self.plt_ann.remove()
+        self.plt_ann = self.sc.axes.annotate('Capture', xy=(x, y), xytext=(1.5, 1.5),
+                 arrowprops=dict(facecolor='black', shrink=0.05))
+        self.sc.draw()
+
+
+
+    def on_press(self, event):
+        print('press', event.key)
+        print('key   ', event.xdata)
+        sys.stdout.flush()
+
+
 
     def __init__(self):
         super(Bix, self).__init__()
         self.setupUi(self)
         self.setWindowTitle("BIX")
-        self.setCentralWidget(self.pages)
         self.pages.setCurrentIndex(0)
         center = QScreen.availableGeometry(QApplication.primaryScreen()).center()
         geo = self.frameGeometry()
@@ -695,6 +743,8 @@ class Bix(QMainWindow, Ui_MainWindow):
             os.unlink(DEV_SHM_DL_PROGRESS)
         self.progressBar.setValue(0)
         self.lbl_download.setText('')
+        self.lbl_p_i = 0
+        self.plt_ann = None
 
 
         # async stuff
@@ -730,6 +780,18 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.timer_cb)
         self.timer.start(1000)
+
+        # plots
+        plt.ion()
+        self.sc = MplCanvas(self, width=5, height=4, dpi=100)
+        self.sc.axes.plot([0,1,2,3,4], [10,1,20,3,40])
+        cid = self.sc.mpl_connect('button_press_event', self.onclick)
+        self.sc.mpl_connect('key_press_event', self.on_press)
+        self.sc.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        self.sc.setFocus()
+        self.lay.addWidget(self.sc)
+
+
 
 
 
