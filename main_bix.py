@@ -791,6 +791,9 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.sc.setFocus()
         self.lay.addWidget(self.sc)
 
+        self.pages.setCurrentIndex(0)
+        self.tabs.setCurrentIndex(0)
+
 
 
 

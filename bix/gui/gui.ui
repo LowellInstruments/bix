@@ -22,13 +22,13 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="QTabWidget" name="tabWidget">
+     <widget class="QTabWidget" name="tabs">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="laytab">
        <attribute name="title">
-        <string>Tab 1</string>
+        <string>Logger</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_16">
         <property name="leftMargin">
@@ -717,7 +717,7 @@ BEH</string>
       </widget>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
-        <string>Tab 2</string>
+        <string>Plots</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_18">
         <item>
