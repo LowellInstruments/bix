@@ -5,8 +5,10 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 apps/__pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
+bix/gui/__pycache__/
 
 
 # Distribution / packaging
