@@ -11,5 +11,6 @@ dependencies = [
     "bleak",
     "https://github.com/LowellInstruments/ble.git",
     "PyQt6",
-    "setproctitle"
+    "setproctitle",
+    "pyqtgraph"
 ]

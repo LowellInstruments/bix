@@ -24,7 +24,7 @@
     <item>
      <widget class="QTabWidget" name="tabs">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="laytab">
        <attribute name="title">
@@ -67,14 +67,14 @@
                        </size>
                       </property>
                       <property name="text">
-                       <string>Import2</string>
+                       <string>Import File</string>
                       </property>
                      </widget>
                     </item>
                     <item>
                      <widget class="QLabel" name="lbl_import_macs">
                       <property name="text">
-                       <string>List of Known Macs</string>
+                       <string>List of Known Loggers</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -647,7 +647,7 @@ BEH</string>
                  </layout>
                 </item>
                 <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_8">
+                 <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="1,1,1">
                   <item>
                    <widget class="QPushButton" name="btn_disconnect">
                     <property name="minimumSize">
@@ -671,6 +671,19 @@ BEH</string>
                     </property>
                     <property name="text">
                      <string>MTS</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_gec">
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>100</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>GEC</string>
                     </property>
                    </widget>
                   </item>
@@ -721,13 +734,27 @@ BEH</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_18">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_17" stretch="1,0,1">
+         <layout class="QVBoxLayout" name="verticalLayout_17" stretch="1,1,1,20">
           <item>
            <widget class="QPushButton" name="btn_plot">
             <property name="text">
-             <string>PushButton</string>
+             <string>Import CSV File to Plot</string>
             </property>
            </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_10">
+            <item>
+             <widget class="QLabel" name="lbl_plot">
+              <property name="text">
+               <string/>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_9">

@@ -16,10 +16,11 @@ loop = asyncio.get_event_loop()
 
 
 def mac_test():
-    mt = "D0:2E:AB:D9:29:48"  # TDO bread
+    # mt = "D0:2E:AB:D9:29:48"  # TDO bread
     # mt = "F0:5E:CD:25:92:F1"  # TDO 2508700 *
     # mt = "F0:5E:CD:25:A1:16"    # TDO 2508701
     # mt = "F0:5E:CD:25:92:9D"    # TDO 2508702
+    mt = "F0:5E:CD:25:92:95"    # TDO 2508703 *
     # mt = "F0:5E:CD:25:95:D4"    # CTD
     # mt = "F0:5E:CD:25:92:EA" # CTD_JED
     return mt

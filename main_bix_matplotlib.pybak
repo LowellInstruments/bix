@@ -1,18 +1,15 @@
 import os
-
-import pandas as pd
+from PyQt6 import QtCore
 from PyQt6.QtCore import (
     QThreadPool,
-    QRunnable, pyqtSlot, QTimer,
+    QRunnable, pyqtSlot, QTimer, Qt,
 )
-from PyQt6.QtGui import QScreen
+from PyQt6.QtGui import QScreen, QMovie
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
     QFileDialog, QMessageBox,
 )
-from pyqtgraph import DateAxisItem
-
 from bix.utils import (
     mac_test,
     FOL_BIL, loop, WorkerSignals,
@@ -28,8 +25,11 @@ from lix.lix import parse_file_lid_v5
 import sys
 import matplotlib
 matplotlib.use('QtAgg')
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 import pyqtgraph as pg
-from datetime import datetime
+
 
 
 
@@ -38,6 +38,16 @@ g_mac = mac_test()
 g_busy = False
 g_d = {}
 g_glt = ''
+
+
+
+class MplCanvas(FigureCanvasQTAgg):
+
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        super().__init__(fig)
+
 
 
 
@@ -106,6 +116,7 @@ class Worker(QRunnable):
         global g_glt
         g_glt = v
 
+
         rv, v = await cmd_gfv()
         if rv:
             self._ser('gfv')
@@ -172,15 +183,6 @@ class Worker(QRunnable):
         if rv:
             self._ser('mts')
             return
-        self.signals.done.emit()
-
-
-    async def wb_gec(self):
-        rv, v = await cmd_gec()
-        if rv:
-            self._ser('gec')
-            return
-        print('GEC rv, v', rv, v)
         self.signals.done.emit()
 
 
@@ -349,8 +351,7 @@ class Worker(QRunnable):
             'wb_scf': self.wb_scf,
             'wb_beh': self.wb_beh,
             'wb_download': self.wb_download,
-            'wb_mts': self.wb_mts,
-            'wb_gec': self.wb_gec
+            'wb_mts': self.wb_mts
         }
         self.ls_fn = []
         if type(ls_gui_cmd) is str:
@@ -363,16 +364,23 @@ class Worker(QRunnable):
 
 
 
+class CustomViewBox(pg.ViewBox):
+    def mousePressEvent(self, ev):
+        print('x = {}'.format(self.mapToView(ev.pos()).x()))
+        print('y = {}'.format(self.mapToView(ev.pos()).y()))
+
+
+
+
 class MyPlotWidget(pg.PlotWidget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        # self.scene() is a pyqtgraph.GraphicsScene.GraphicsScene.GraphicsScene
         self.scene().sigMouseClicked.connect(self.mouse_clicked)
 
     def mouse_clicked(self, mouseClickEvent):
+        # mouseClickEvent is a pyqtgraph.GraphicsScene.mouseEvents.MouseClickEvent
         print('clicked plot 0x{:x}, event: {}'.format(id(self), mouseClickEvent))
-        ev = mouseClickEvent
-        print('x = {}'.format(self.mapToView(ev.pos()).x()))
-        print('y = {}'.format(self.mapToView(ev.pos()).y()))
 
 
 
@@ -412,16 +420,6 @@ class Bix(QMainWindow, Ui_MainWindow):
 
     def dialog_import_file_behavior(self):
         return self._load_toml_file('Select file with BEHAVIOR info')
-
-
-    def dialog_import_file_csv_to_plot(self):
-        p, _ = QFileDialog.getOpenFileName(
-            self,
-            'Choose CSV file',
-            FOL_BIL,
-            'CSV Files (*.csv)'
-        )
-        return p
 
 
     def slot_signal_done(self):
@@ -618,11 +616,6 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     @dec_gui_busy
-    def on_click_btn_gec(self, _):
-        self.wrk('wb_gec')
-
-
-    @dec_gui_busy
     def on_click_btn_run(self, _):
         self.wrk('wb_run')
 
@@ -697,34 +690,6 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.wrk('wb_beh')
 
 
-    def on_click_btn_plot(self, _):
-        p = self.dialog_import_file_csv_to_plot()
-        # p = '/home/kaz/Downloads/dl_bil_v2/F0-5E-CD-25-92-F1/2508700_BIL_20250923_184053_TDO.csv'
-        if not p:
-            return
-        self.lay.removeWidget(self.gr)
-        self.gr = MyPlotWidget(
-            # viewBox=CustomViewBox(),
-            axisItems={'bottom': pg.DateAxisItem()})
-        self.lay.addWidget(self.gr)
-        df = pd.read_csv(p)
-        x = df['ISO 8601 Time'].values
-        y = df['raw ADC Pressure'].values
-        xf = []
-        for i in x:
-            dt = datetime.strptime(i, '%Y-%m-%dT%H:%M:%S.000Z').timestamp()
-            xf.append(dt)
-        self.gr.plot(xf, y, pen='b', symbol='o', symbolSize=5, name="My Data")
-        self.gr.setBackground("white")
-        pen = pg.mkPen(color=(255, 0, 0))
-        bn = os.path.basename(p)
-        self.lbl_plot.setText(bn)
-        self.gr.setVisible(True)
-
-        view_box = self.gr.plotItem.vb
-        view_box.setMouseEnabled(x=True, y=True)
-
-
     def on_click_btn_import_macs(self, _):
         d = self.dialog_import_macs()
         if not d:
@@ -748,11 +713,37 @@ class Bix(QMainWindow, Ui_MainWindow):
             self.lbl_busy.setText('busy' + ('.' * v))
 
 
+    def onclick(self, event):
+        print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
+              ('double' if event.dblclick else 'single', event.button,
+               event.x, event.y, event.xdata, event.ydata))
+        x = event.xdata
+        y = event.ydata
+        self.lbl_p_i = (self.lbl_p_i + 1) % 2
+        if self.lbl_p_i:
+            self.lbl_p1.setText(f'{int(event.xdata)} {event.ydata}')
+        else:
+            self.lbl_p2.setText(f'{int(event.xdata)} {event.ydata}')
+        if self.plt_ann:
+            self.plt_ann.remove()
+        self.plt_ann = self.sc.axes.annotate('Capture', xy=(x, y), xytext=(1.5, 1.5),
+                 arrowprops=dict(facecolor='black', shrink=0.05))
+        self.sc.draw()
+
+
+
+    def on_press(self, event):
+        print('press', event.key)
+        print('key   ', event.xdata)
+        sys.stdout.flush()
+
+
+
     def __init__(self):
         super(Bix, self).__init__()
         self.setupUi(self)
         self.setWindowTitle("BIX")
-        self.threadpool = QThreadPool()
+        self.pages.setCurrentIndex(0)
         center = QScreen.availableGeometry(QApplication.primaryScreen()).center()
         geo = self.frameGeometry()
         geo.moveCenter(center)
@@ -763,6 +754,12 @@ class Bix(QMainWindow, Ui_MainWindow):
             os.unlink(DEV_SHM_DL_PROGRESS)
         self.progressBar.setValue(0)
         self.lbl_download.setText('')
+        self.lbl_p_i = 0
+        self.plt_ann = None
+
+
+        # async stuff
+        self.threadpool = QThreadPool()
 
 
         # buttons
@@ -784,9 +781,6 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_import_macs.clicked.connect(self.on_click_btn_import_macs)
         self.btn_download.clicked.connect(self.on_click_btn_download)
         self.btn_mts.clicked.connect(self.on_click_btn_mts)
-        self.btn_gec.clicked.connect(self.on_click_btn_gec)
-        self.btn_plot.clicked.connect(self.on_click_btn_plot)
-
 
 
         # be sure we are disconnected
@@ -799,15 +793,24 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.timer.start(1000)
 
         # plots
-        self.gr = MyPlotWidget(
-            # viewBox=CustomViewBox(),
-            axisItems={'bottom': pg.DateAxisItem()})
-        self.gr.setVisible(False)
+        plt.ion()
+        self.sc = MplCanvas(self, width=5, height=4, dpi=100)
+        self.sc.axes.plot([0,1,2,3,4], [10,1,20,3,40])
+        cid = self.sc.mpl_connect('button_press_event', self.onclick)
+        self.sc.mpl_connect('key_press_event', self.on_press)
+        self.sc.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        self.sc.setFocus()
 
 
-        # what to show upon boot
+        self.pl2 = MyPlotWidget(viewBox=CustomViewBox())
+        # self.lay.addWidget(self.sc)
+        self.lay.addWidget(self.pl2)
+
+
         self.pages.setCurrentIndex(0)
         self.tabs.setCurrentIndex(0)
+
+
 
 
 
