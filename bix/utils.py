@@ -39,6 +39,7 @@ class WorkerSignals(QObject):
     gcc = pyqtSignal(object)
     gcf = pyqtSignal(object)
     download = pyqtSignal(str)
+    converting = pyqtSignal()
 
 
 

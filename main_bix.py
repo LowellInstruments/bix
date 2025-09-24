@@ -84,7 +84,11 @@ class Worker(QRunnable):
             if dst_filename.endswith('.lid'):
                 bn = os.path.basename(dst_filename)
                 print(f'BIX converting {bn}')
-                parse_file_lid_v5(dst_filename)
+                try:
+                    self.signals.converting.emit()
+                    parse_file_lid_v5(dst_filename)
+                except (Exception, ) as ex:
+                    print(f'error converting {dst_filename} -> {ex}')
 
         self.signals.done.emit()
 
@@ -429,6 +433,11 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.lbl_busy.setText('done')
 
 
+    def slot_signal_converting(self):
+        self.lbl_busy.setStyleSheet('color: yellow')
+        self.lbl_busy.setText('converting')
+
+
     def slot_signal_download(self, s):
         self.lbl_download.setText(s)
 
@@ -568,6 +577,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         w.signals.info.connect(self.slot_signal_info)
         w.signals.sensors.connect(self.slot_signal_sensors)
         w.signals.done.connect(self.slot_signal_done)
+        w.signals.converting.connect(self.slot_signal_converting)
         w.signals.disconnected.connect(self.slot_signal_disconnected)
         w.signals.error.connect(self.slot_signal_error)
         w.signals.status.connect(self.slot_signal_status)
@@ -736,6 +746,8 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     def timer_cb(self):
+
+        # show download progress
         try:
             with open(DEV_SHM_DL_PROGRESS, 'r') as f:
                 v = f.read()
@@ -743,9 +755,17 @@ class Bix(QMainWindow, Ui_MainWindow):
         except FileNotFoundError:
             self.progressBar.setValue(0)
 
+        # animated busy
         if g_busy:
             v = (int(time.time()) % 3) + 1
-            self.lbl_busy.setText('busy' + ('.' * v))
+            s = self.lbl_busy.text()
+            self.lbl_busy.setText(s + ('.' * v))
+
+        # always on correct tab
+        if not is_connected():
+            if self.pages.currentIndex() != 0:
+                print('moving to proper logger GUI page')
+                self.pages.setCurrentIndex(0)
 
 
     def __init__(self):
