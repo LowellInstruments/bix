@@ -1,23 +1,23 @@
 import os
-
 import pandas as pd
 from PyQt6 import QtGui
 from PyQt6.QtCore import (
     QThreadPool,
-    QRunnable, pyqtSlot, QTimer,
+    QRunnable, pyqtSlot, QTimer, QUrl,
 )
-from PyQt6.QtGui import QScreen
+from PyQt6.QtWebEngineCore import QWebEngineSettings
+from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
     QFileDialog, QMessageBox,
 )
-from pyqtgraph import DateAxisItem
-
 from bix.utils import (
     mac_test,
     FOL_BIL, loop, WorkerSignals,
-    create_profile_dictionary, create_calibration_dictionary, num_to_ascii85, DEF_ALIASES_FILE_PATH
+    create_profile_dictionary,
+    create_calibration_dictionary,
+    num_to_ascii85, DEF_ALIASES_FILE_PATH
 )
 from bix.gui.gui import Ui_MainWindow
 import setproctitle
@@ -31,6 +31,7 @@ import matplotlib
 matplotlib.use('QtAgg')
 import pyqtgraph as pg
 from datetime import datetime
+import plotly.graph_objects as go
 
 
 
@@ -750,7 +751,6 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     def timer_cb(self):
-
         # show download progress
         try:
             with open(DEV_SHM_DL_PROGRESS, 'r') as f:
@@ -780,11 +780,24 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.threadpool = QThreadPool()
         self.setFixedWidth(1024)
         self.setFixedHeight(768)
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.timer_cb)
+        self.timer.start(1000)
+        self.pages.setCurrentIndex(0)
+        self.tabs.setCurrentIndex(0)
         self.lbl_gui_version.setText('v' + self._get_version())
         if os.path.exists(DEV_SHM_DL_PROGRESS):
             os.unlink(DEV_SHM_DL_PROGRESS)
         self.progressBar.setValue(0)
         self.lbl_download.setText('')
+        center = QtGui.QGuiApplication.primaryScreen().geometry().center()
+        self.move(center - self.rect().center())
+        self.maps_webview = QWebEngineView()
+        settings = self.maps_webview.page().settings()
+        settings.setAttribute(
+            QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
+        self.lay_maps.addWidget(self.maps_webview)
+
 
 
         # buttons
@@ -810,29 +823,14 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_plot.clicked.connect(self.on_click_btn_plot)
 
 
-
-        # be sure we are disconnected
-        # todo: remove this
-        ble_linux_disconnect_by_mac(g_mac)
-
-        # create timer
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.timer_cb)
-        self.timer.start(1000)
-
-        # plots
+        # plots of pressure, temperature, CSV files
         self.gr = MyPlotWidget(
             # viewBox=CustomViewBox(),
             axisItems={'bottom': pg.DateAxisItem()})
         self.gr.setVisible(False)
 
 
-        # what to show upon boot
-        self.pages.setCurrentIndex(0)
-        self.tabs.setCurrentIndex(0)
-
-
-        # auto-import MAC file
+        # auto-import MAC aliases file
         self.lst_known_macs.clear()
         if os.path.exists(DEF_ALIASES_FILE_PATH):
             print(f'auto-importing alias file {DEF_ALIASES_FILE_PATH}')
@@ -842,13 +840,48 @@ class Bix(QMainWindow, Ui_MainWindow):
                 self.lst_known_macs.addItem(f'{k} - {v}')
 
 
-        # uncomment when needed
+
+        # debug: uncomment when needed
         self.btn_test.setVisible(False)
+        # be sure we are disconnected
+        # todo: remove this
+        ble_linux_disconnect_by_mac(g_mac)
 
 
-        # move window
-        center = QtGui.QGuiApplication.primaryScreen().geometry().center()
-        self.move(center - self.rect().center())
+        # maps
+        my_map = go.Scattermap(
+            lat=['45.5017', '46'],
+            lon=['-73.5673', '-74'],
+            mode='markers',
+            marker=go.scattermap.Marker(
+                size=14
+            ),
+            text=['Montreal', 'pepi'],
+        )
+        fig = go.Figure(my_map)
+        fig.update_layout(
+            margin=dict(
+                l=0,
+                r=0,
+                b=0,
+                t=0,
+                pad=0
+            ),
+            hovermode='closest',
+            map=dict(
+                bearing=0,
+                center=go.layout.map.Center(
+                    lat=45,
+                    lon=-73
+                ),
+                pitch=0,
+                zoom=5
+            )
+        )
+        fig.write_html('/tmp/a.html')
+        url = QUrl.fromLocalFile('/tmp/a.html')
+        self.maps_webview.load(url)
+
 
 
 

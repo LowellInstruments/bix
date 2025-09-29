@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>760</width>
-    <height>697</height>
+    <height>711</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabs">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="laytab">
        <attribute name="title">
@@ -728,7 +728,7 @@ BEH</string>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_2">
+      <widget class="QWidget" name="tab_plots">
        <attribute name="title">
         <string>Plots</string>
        </attribute>
@@ -782,6 +782,24 @@ BEH</string>
           </item>
           <item>
            <layout class="QVBoxLayout" name="lay"/>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_maps">
+       <attribute name="title">
+        <string>Maps</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <layout class="QVBoxLayout" name="lay_maps">
+          <item>
+           <widget class="QPushButton" name="btn_map">
+            <property name="text">
+             <string>Import CST file to map</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
