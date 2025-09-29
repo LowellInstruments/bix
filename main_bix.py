@@ -6,7 +6,6 @@ from PyQt6.QtCore import (
     QRunnable, pyqtSlot, QTimer, QUrl,
 )
 from PyQt6.QtWebEngineCore import QWebEngineSettings
-from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -32,7 +31,7 @@ matplotlib.use('QtAgg')
 import pyqtgraph as pg
 from datetime import datetime
 import plotly.graph_objects as go
-
+from PyQt6.QtWebEngineWidgets import QWebEngineView
 
 
 os.makedirs(FOL_BIL, exist_ok=True)
@@ -188,6 +187,30 @@ class Worker(QRunnable):
             return
         print('GEC rv, v', rv, v)
         self.signals.done.emit()
+
+
+    async def wb_mux(self):
+        rv, v = await cmd_mux()
+        if rv:
+            self._ser('mux')
+            return
+        print('MUX rv, v', rv, v)
+        self.signals.done.emit()
+        i = int(v)
+        s = ''
+        if i == 0:
+            s = f'MUX {i} = V1 V2'
+        elif i == 1:
+            s = f'MUX {i} = V2 V1'
+        elif i == 2:
+            s = f'MUX {i} = C2 C1'
+        elif i == 3:
+            s = f'MUX {i} = C1 C2'
+        elif i == 4:
+            s = f'MUX {i} = all shorted'
+        elif i == 5:
+            s = f'MUX {i} = all open'
+        self.signals.result.emit(s)
 
 
     async def wb_sts(self):
@@ -356,7 +379,8 @@ class Worker(QRunnable):
             'wb_beh': self.wb_beh,
             'wb_download': self.wb_download,
             'wb_mts': self.wb_mts,
-            'wb_gec': self.wb_gec
+            'wb_gec': self.wb_gec,
+            'wb_mux': self.wb_mux,
         }
         self.ls_fn = []
         if type(ls_gui_cmd) is str:
@@ -435,6 +459,10 @@ class Bix(QMainWindow, Ui_MainWindow):
     def slot_signal_done(self):
         self.lbl_busy.setStyleSheet('color: black')
         self.lbl_busy.setText('done')
+
+
+    def slot_signal_result(self, s):
+        self.lbl_result.setText(s)
 
 
     def slot_signal_converting(self):
@@ -582,6 +610,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         w.signals.info.connect(self.slot_signal_info)
         w.signals.sensors.connect(self.slot_signal_sensors)
         w.signals.done.connect(self.slot_signal_done)
+        w.signals.result.connect(self.slot_signal_result)
         w.signals.converting.connect(self.slot_signal_converting)
         w.signals.disconnected.connect(self.slot_signal_disconnected)
         w.signals.error.connect(self.slot_signal_error)
@@ -635,6 +664,11 @@ class Bix(QMainWindow, Ui_MainWindow):
     @dec_gui_busy
     def on_click_btn_gec(self, _):
         self.wrk('wb_gec')
+
+
+    @dec_gui_busy
+    def on_click_btn_mux(self, _):
+        self.wrk('wb_mux')
 
 
     @dec_gui_busy
@@ -729,9 +763,10 @@ class Bix(QMainWindow, Ui_MainWindow):
         for i in x:
             dt = datetime.strptime(i, '%Y-%m-%dT%H:%M:%S.000Z').timestamp()
             xf.append(dt)
-        self.gr.plot(xf, y, pen='b', symbol='o', symbolSize=5, name="My Data")
-        self.gr.setBackground("white")
+        # pen None removes the line
         pen = pg.mkPen(color=(255, 0, 0))
+        self.gr.plot(xf, y, pen=None, symbol='o', symbolSize=5, name="My Data")
+        self.gr.setBackground("white")
         bn = os.path.basename(p)
         self.lbl_plot.setText(bn)
         self.gr.setVisible(True)
@@ -820,6 +855,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_download.clicked.connect(self.on_click_btn_download)
         self.btn_mts.clicked.connect(self.on_click_btn_mts)
         self.btn_gec.clicked.connect(self.on_click_btn_gec)
+        self.btn_mux.clicked.connect(self.on_click_btn_mux)
         self.btn_plot.clicked.connect(self.on_click_btn_plot)
 
 
