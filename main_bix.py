@@ -319,6 +319,11 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     @dec_gui_busy
+    def on_click_btn_osc(self, _):
+        self.wrk('wb_osc')
+
+
+    @dec_gui_busy
     def on_click_btn_run(self, _):
         self.wrk('wb_run')
 
@@ -577,6 +582,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_mts.clicked.connect(self.on_click_btn_mts)
         self.btn_gec.clicked.connect(self.on_click_btn_gec)
         self.btn_mux.clicked.connect(self.on_click_btn_mux)
+        self.btn_osc.clicked.connect(self.on_click_btn_osc)
         self.btn_plot.clicked.connect(self.on_click_btn_plot)
         # context SCF menu
         self.context_menu_scf = QMenu(self)

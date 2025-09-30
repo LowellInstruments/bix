@@ -209,6 +209,17 @@ class WorkerBle(QRunnable):
         self.signals.result.emit(s)
 
 
+    async def wb_osc(self):
+        rv, v = await cmd_osc()
+        if rv:
+            self._ser('osc')
+            return
+        print('OSC rv, v', rv, v)
+        self.signals.done.emit()
+        i = int(v)
+        self.signals.result.emit(f'OSC = {i}')
+
+
     async def wb_sts(self):
         rv, v = await cmd_sts()
         if rv:
@@ -389,6 +400,7 @@ class WorkerBle(QRunnable):
             'wb_mts': self.wb_mts,
             'wb_gec': self.wb_gec,
             'wb_mux': self.wb_mux,
+            'wb_osc': self.wb_osc,
         }
         self.ls_fn = []
         if type(ls_gui_cmd) is str:

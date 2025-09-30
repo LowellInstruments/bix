@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../bil/.idea/bil.iml" filepath="$PROJECT_DIR$/../bil/.idea/bil.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/bix.iml" filepath="$PROJECT_DIR$/.idea/bix.iml" />
       <module fileurl="file://$PROJECT_DIR$/../ble/.idea/ble.iml" filepath="$PROJECT_DIR$/../ble/.idea/ble.iml" />
       <module fileurl="file://$PROJECT_DIR$/../lix/.idea/lix.iml" filepath="$PROJECT_DIR$/../lix/.idea/lix.iml" />
