@@ -3,7 +3,7 @@ import pandas as pd
 from PyQt6 import QtGui
 from PyQt6.QtCore import (
     QThreadPool,
-    QRunnable, pyqtSlot, QTimer, QUrl,
+    QTimer, QUrl,
 )
 from PyQt6.QtWebEngineCore import QWebEngineSettings
 from PyQt6.QtWidgets import (
@@ -13,18 +13,18 @@ from PyQt6.QtWidgets import (
 )
 from bix.utils import (
     mac_test,
-    FOL_BIL, loop, WorkerSignals,
+    FOL_BIL,
     create_profile_dictionary,
     create_calibration_dictionary,
-    num_to_ascii85, DEF_ALIASES_FILE_PATH
+    DEF_ALIASES_FILE_PATH, global_set, global_get
 )
 from bix.gui.gui import Ui_MainWindow
 import setproctitle
 from bix.gui.tables import fill_calibration_table, fill_profile_table
+from bix.worker_ble import WorkerBle
 from ble.ble import *
 from ble.ble_linux import ble_linux_disconnect_by_mac
 import toml
-from lix.lix import parse_file_lid_v5
 import sys
 import matplotlib
 matplotlib.use('QtAgg')
@@ -34,362 +34,9 @@ import plotly.graph_objects as go
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 
 
+
 os.makedirs(FOL_BIL, exist_ok=True)
-g_mac = mac_test()
-g_busy = False
-g_d = {}
-g_glt = ''
 
-
-
-class Worker(QRunnable):
-
-    def _ser(self, e: str):
-        self.signals.error.emit(f'error {e}')
-
-
-    async def wb_download(self):
-        rv, d = await cmd_dir()
-        if rv:
-            self._ser('dir')
-            return
-        print('DIR d', d)
-        n = len(d)
-
-        if n == 0:
-            self.signals.download.emit('no files')
-            self.signals.done.emit()
-            return
-
-        for i, name_size in enumerate(d.items()):
-            name, size = name_size
-            rv = await cmd_dwg(name)
-            if rv:
-                self._ser('dwg')
-                return
-            time.sleep(1)
-            print(f'downloading file {i + 1} / {n}')
-            self.signals.download.emit(f'file {i + 1} / {n}')
-            rv, data = await cmd_dwl(size)
-            if rv:
-                self._ser('dwl')
-                return
-            print(f'saving {name}')
-            dst_filename = f'{FOL_BIL}/{name}'
-            with open(dst_filename, 'wb') as f:
-                f.write(data)
-            time.sleep(1)
-
-            # convert
-            # todo: maybe as thread?
-            if dst_filename.endswith('.lid'):
-                bn = os.path.basename(dst_filename)
-                print(f'BIX converting {bn}')
-                try:
-                    self.signals.converting.emit()
-                    parse_file_lid_v5(dst_filename)
-                except (Exception, ) as ex:
-                    print(f'error converting {dst_filename} -> {ex}')
-
-        self.signals.done.emit()
-
-
-    async def wb_connect(self):
-        mac = g_mac
-        rv = await connect_by_mac(mac)
-        if rv == 0:
-            self._ser('connecting')
-            return
-        self.signals.connected.emit()
-
-        d = {}
-        rv, v = await cmd_glt()
-        if rv:
-            self._ser('glt')
-            return
-        d['glt'] = v
-        global g_glt
-        g_glt = v
-
-        rv, v = await cmd_gfv()
-        if rv:
-            self._ser('gfv')
-            return
-        d['gfv'] = v
-
-        rv, v = await cmd_mac()
-        if rv:
-            self._ser('mac')
-            return
-        d['mac'] = v
-
-        rv, v = await cmd_rli()
-        if rv:
-            self._ser('rli')
-            return
-        d['sn'] = v['SN']
-
-        self.signals.info.emit(d)
-        self.signals.done.emit()
-
-
-    async def wb_disconnect(self):
-        await disconnect()
-        self.signals.disconnected.emit()
-        self.signals.done.emit()
-
-
-    async def wb_run(self):
-        rv = await cmd_stm()
-        if rv:
-            self._ser('stm')
-            return
-        rv = await cmd_dns('BIL')
-        if rv:
-            self._ser('dns')
-            return
-        rv = await cmd_fds()
-        if rv:
-            self._ser('fds')
-            return
-        g = ("-3.333333", "-4.444444", None, None)
-        rv = await cmd_rws(g)
-        print('run rv', rv)
-        if rv:
-            self._ser('rws')
-            return
-        self.signals.status.emit('running')
-        self.signals.done.emit()
-
-
-    async def wb_stp(self):
-        g = ("-3.333333", "-4.444444", None, None)
-        rv = await cmd_sws(g)
-        if rv:
-            self._ser('sws')
-            return
-        self.signals.status.emit('stopped')
-        self.signals.done.emit()
-
-
-    async def wb_mts(self):
-        rv = await cmd_mts()
-        if rv:
-            self._ser('mts')
-            return
-        self.signals.done.emit()
-
-
-    async def wb_gec(self):
-        rv, v = await cmd_gec()
-        if rv:
-            self._ser('gec')
-            return
-        print('GEC rv, v', rv, v)
-        self.signals.done.emit()
-
-
-    async def wb_mux(self):
-        rv, v = await cmd_mux()
-        if rv:
-            self._ser('mux')
-            return
-        print('MUX rv, v', rv, v)
-        self.signals.done.emit()
-        i = int(v)
-        s = ''
-        if i == 0:
-            s = f'MUX {i} = V1 V2'
-        elif i == 1:
-            s = f'MUX {i} = V2 V1'
-        elif i == 2:
-            s = f'MUX {i} = C2 C1'
-        elif i == 3:
-            s = f'MUX {i} = C1 C2'
-        elif i == 4:
-            s = f'MUX {i} = all shorted'
-        elif i == 5:
-            s = f'MUX {i} = all open'
-        self.signals.result.emit(s)
-
-
-    async def wb_sts(self):
-        rv, v = await cmd_sts()
-        if rv:
-            self._ser('sts')
-            return
-        self.signals.status.emit(v)
-        self.signals.done.emit()
-
-
-    async def wb_frm(self):
-        rv = await cmd_frm()
-        if rv:
-            self._ser('frm')
-        self.signals.done.emit()
-
-
-    async def wb_led(self):
-        rv = await cmd_led()
-        if rv:
-            self._ser('led')
-        self.signals.done.emit()
-
-
-    async def wb_sensors(self):
-        d = {
-            'bat': '',
-            'gst': '',
-            'gsp': '',
-            'acc': '',
-            'gsc': '',
-            'gdo': ''
-        }
-
-        rv, v = await cmd_bat()
-        if rv:
-            self._ser('bat')
-            return
-        d['bat'] = v
-
-        if g_glt in ('TDO', 'CTD'):
-            rv, v = await cmd_gst()
-            if rv:
-                self._ser('gst')
-                return
-            d['gst'] = v
-            rv, v = await cmd_gsp()
-            if rv:
-                self._ser('gsp')
-                return
-            d['gsp'] = v
-            # todo: do accelerometer
-
-        if g_glt == 'CTD':
-            rv, v = await cmd_gsc()
-            if rv:
-                self._ser('gsc')
-                return
-            d['gsc'] = v
-
-        if g_glt.startswith('DO'):
-            rv, v = await cmd_gdx()
-            if rv:
-                self._ser('gdx')
-                return
-            d['gdo'] = v
-
-        self.signals.sensors.emit(d)
-        self.signals.done.emit()
-
-
-    async def wb_gcc(self):
-        rv, s = await cmd_gcc()
-        if rv:
-            self._ser('gcc')
-            return
-        self.signals.gcc.emit(s)
-        self.signals.done.emit()
-
-
-    async def wb_gcf(self):
-        rv, s = await cmd_gcf()
-        if rv:
-            self._ser('gcf')
-            return
-        self.signals.gcf.emit(s)
-        self.signals.done.emit()
-
-
-    async def wb_scc(self):
-        d = g_d
-        rv = 0
-        for k, v in d.items():
-            # todo: see we want to enforce MAC
-            if k == 'MAC':
-                continue
-            if type(v) is not str:
-                v = num_to_ascii85(v)
-            rv = await cmd_scc(k, v)
-            if rv:
-                self._ser(f'scc, tag {k}')
-                break
-        if rv == 0:
-            rv, s = await cmd_gcc()
-            if rv:
-                self._ser('gcc after scc')
-                return
-            self.signals.gcc.emit(s)
-        self.signals.done.emit()
-
-
-    async def wb_scf(self):
-        d = g_d
-        rv = 0
-        for k, v in d.items():
-            rv = await cmd_scf(k, v)
-            if rv:
-                self._ser(f'scf, tag {k}')
-                break
-        if rv == 0:
-            rv, s = await cmd_gcf()
-            if rv:
-                self._ser('gcf after scf')
-                return
-            self.signals.gcf.emit(s)
-        self.signals.done.emit()
-
-
-    async def wb_beh(self):
-        d = g_d
-        for k, v in d.items():
-            rv = await cmd_beh(k, v)
-            if rv:
-                self._ser(f'beh, tag {k}')
-                break
-        self.signals.done.emit()
-
-
-    @pyqtSlot()
-    def run(self):
-        for fn in self.ls_fn:
-            global g_busy
-            g_busy = True
-            print("thread start")
-            loop.run_until_complete(fn())
-            print("thread complete")
-            g_busy = False
-
-
-    def __init__(self, ls_gui_cmd, *args, **kwargs):
-        super().__init__()
-        d = {
-            'wb_connect': self.wb_connect,
-            'wb_disconnect': self.wb_disconnect,
-            'wb_sensors': self.wb_sensors,
-            'wb_run': self.wb_run,
-            'wb_stop': self.wb_stp,
-            'wb_sts': self.wb_sts,
-            'wb_frm': self.wb_frm,
-            'wb_led': self.wb_led,
-            'wb_gcc': self.wb_gcc,
-            'wb_gcf': self.wb_gcf,
-            'wb_scc': self.wb_scc,
-            'wb_scf': self.wb_scf,
-            'wb_beh': self.wb_beh,
-            'wb_download': self.wb_download,
-            'wb_mts': self.wb_mts,
-            'wb_gec': self.wb_gec,
-            'wb_mux': self.wb_mux,
-        }
-        self.ls_fn = []
-        if type(ls_gui_cmd) is str:
-            ls_gui_cmd = [ls_gui_cmd]
-        for i in ls_gui_cmd:
-            self.ls_fn.append(d[i])
-        self.args = args
-        self.kwargs = kwargs
-        self.signals = WorkerSignals()
 
 
 
@@ -398,9 +45,9 @@ class MyPlotWidget(pg.PlotWidget):
         super().__init__(**kwargs)
         self.scene().sigMouseClicked.connect(self.mouse_clicked)
 
-    def mouse_clicked(self, mouseClickEvent):
-        print('clicked plot 0x{:x}, event: {}'.format(id(self), mouseClickEvent))
-        ev = mouseClickEvent
+    def mouse_clicked(self, mouse_click_event):
+        print('clicked plot 0x{:x}, event: {}'.format(id(self), mouse_click_event))
+        ev = mouse_click_event
         print('x = {}'.format(self.mapToView(ev.pos()).x()))
         ts = self.mapToView(ev.pos()).x()
         print(f't = {datetime.fromtimestamp(ts)}')
@@ -523,6 +170,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.lbl_gfv.setText(d['gfv'])
         glt = d['glt']
         self.lbl_glt.setText(glt)
+        self.lbl_sts.setText(d['sts'])
         self.table.setVisible(glt in ('TDO', 'CTD'))
 
 
@@ -595,7 +243,7 @@ class Bix(QMainWindow, Ui_MainWindow):
     def dec_gui_busy(fxn):
         def wrapper(self, *args, **kwargs):
             # prevent smashing GUI buttons
-            if g_busy:
+            if global_get('busy'):
                 return
             self.lbl_busy.setText('busy')
             # calls GUI button function such as _on_click_btn_leds()
@@ -605,7 +253,7 @@ class Bix(QMainWindow, Ui_MainWindow):
 
     def wrk(self, ls_s):
         # calls constructor in Worker class and bind its signals
-        w = Worker(ls_s)
+        w = WorkerBle(ls_s)
         w.signals.connected.connect(self.slot_signal_connected)
         w.signals.info.connect(self.slot_signal_info)
         w.signals.sensors.connect(self.slot_signal_sensors)
@@ -623,17 +271,18 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     def on_click_lst_known_macs(self):
-        global g_mac
         _it = self.lst_known_macs.currentItem().text()
-        g_mac = str(_it.split(' - ')[0])
+        m = str(_it.split(' - ')[0])
+        global_set('mac', m)
 
 
     @dec_gui_busy
     def on_click_btn_connect(self, _):
-        if g_mac == mac_test():
-            self.lbl_connecting.setText(f'connecting hard-coded {g_mac}')
+        mac = global_get('mac')
+        if mac == mac_test():
+            self.lbl_connecting.setText(f'connecting hard-coded {mac}')
         else:
-            self.lbl_connecting.setText(f'connecting {g_mac}')
+            self.lbl_connecting.setText(f'connecting {mac}')
         self.wrk([
             'wb_connect',
             'wb_sensors',
@@ -720,8 +369,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         if not d:
             return
         self.table.clear()
-        global g_d
-        g_d = d['profiling']
+        global_set('table_profile', d['profiling'])
         self.wrk('wb_scf')
 
 
@@ -731,8 +379,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         if not d:
             return
         self.table.clear()
-        global g_d
-        g_d = d['calibration']
+        global_set('table_calibration', d['calibration'])
         self.wrk('wb_scc')
 
 
@@ -741,8 +388,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         d = self.dialog_import_file_behavior()
         if not d:
             return
-        global g_d
-        g_d = d['behavior']
+        global_set('table_behavior', d['behavior'])
         self.wrk('wb_beh')
 
 
@@ -796,7 +442,7 @@ class Bix(QMainWindow, Ui_MainWindow):
 
         # animated busy
         s = self.lbl_busy.text().split(' ')[0]
-        if g_busy and 'done' not in s:
+        if global_get('busy') and 'done' not in s:
             v = (int(time.time()) % 3) + 1
             self.lbl_busy.setText(s + ' ' + ('.' * v))
 
@@ -881,7 +527,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_test.setVisible(False)
         # be sure we are disconnected
         # todo: remove this
-        ble_linux_disconnect_by_mac(g_mac)
+        ble_linux_disconnect_by_mac(global_get('mac'))
 
 
         # maps

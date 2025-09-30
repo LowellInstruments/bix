@@ -1,8 +1,31 @@
-import asyncio
 import pathlib
 from PyQt6.QtCore import QObject, pyqtSignal
-import numpy as np
-from math import floor
+
+
+
+
+
+
+def mac_test():
+    # mt = "D0:2E:AB:D9:29:48"  # TDO bread
+    # mt = "F0:5E:CD:25:92:F1"  # TDO 2508700 *
+    mt = "F0:5E:CD:25:A1:16"    # TDO 2508701
+    # mt = "F0:5E:CD:25:92:9D"    # TDO 2508702
+    # mt = "F0:5E:CD:25:92:95"    # TDO 2508703 *
+    # mt = "F0:5E:CD:25:95:D4"    # CTD
+    # mt = "F0:5E:CD:25:92:EA" # CTD_JED
+    return mt
+
+
+
+g_d = {
+    'mac': mac_test(),
+    'table_calibration': {},
+    'table_profile': {},
+    'table_behavior': {},
+    'glt': '',
+    'busy': 0
+}
 
 
 
@@ -10,21 +33,17 @@ PATH_ALIAS_FILE = pathlib.Path.home() / 'Downloads' / 'bil_v2_logger_aliases.tom
 RVN_SCC_4 = "00004"
 FOL_BIL = str(pathlib.Path.home() / 'Downloads/dl_bil_v5')
 DEF_ALIASES_FILE_PATH = f'{FOL_BIL}/bil_v5_logger_aliases.toml'
-# todo: manage python versions here
-loop = asyncio.get_event_loop()
-# loop = asyncio.new_event_loop()
 
 
 
-def mac_test():
-    # mt = "D0:2E:AB:D9:29:48"  # TDO bread
-    # mt = "F0:5E:CD:25:92:F1"  # TDO 2508700 *
-    # mt = "F0:5E:CD:25:A1:16"    # TDO 2508701
-    # mt = "F0:5E:CD:25:92:9D"    # TDO 2508702
-    # mt = "F0:5E:CD:25:92:95"    # TDO 2508703 *
-    mt = "F0:5E:CD:25:95:D4"    # CTD
-    # mt = "F0:5E:CD:25:92:EA" # CTD_JED
-    return mt
+def global_set(k, v):
+    g_d[k] = v
+
+
+
+def global_get(k):
+    return g_d[k]
+
 
 
 
@@ -105,29 +124,5 @@ def create_calibration_dictionary():
 
 
 
-def num_to_ascii85(in_num):
-    n = np.array(in_num, dtype='<f4')
-    n.dtype = '<u4'
-    chars = []
-    for i in range(4, -1, -1):
-        chars.append(floor((n / 85 ** i) + 33))
-        n = n % 85 ** i
-    return ''.join([chr(c) for c in chars])
-
-
-def ascii85_to_num(in_str):
-    assert len(in_str) == 5, 'in_str must be exactly five characters.'
-    num = np.array([0], dtype='<u4')
-    chars = [c for c in in_str]
-    for i, c in enumerate(chars):
-        num = num + (ord(c) - 33) * 85 ** (4-i)
-    num.dtype = '<f4'
-    return num.item()
-
-
 if __name__ == '__main__':
     n = 0
-    a = num_to_ascii85(n)
-    print(f'n {n} a {a}')
-    n = ascii85_to_num(a)
-    print(f'n {n} a {a}')

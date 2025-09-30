@@ -1,6 +1,7 @@
 from PyQt6 import QtCore
 from PyQt6.QtWidgets import QTableWidgetItem, QHeaderView, QTableWidget
-from bix.utils import ascii85_to_num
+from lix.ascii85 import ascii85_to_num
+
 
 
 def fill_calibration_table(app, d):
@@ -29,6 +30,7 @@ def fill_calibration_table(app, d):
     h.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
     h.setDefaultAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
     app.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+
 
 
 def fill_profile_table(app, d):
