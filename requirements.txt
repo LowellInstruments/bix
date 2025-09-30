@@ -1,5 +1,8 @@
 bleak
-ble@git+https://github.com/LowellInstruments/ble.git
 PyQt6
 setproctitle
 pyqtgraph
+plotly
+toml
+ble@git+https://github.com/LowellInstruments/ble.git
+lix@git+https://github.com/LowellInstruments/lix.git

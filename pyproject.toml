@@ -9,8 +9,11 @@ version = "0.1"
 description = "New BIL for Lowell Instruments"
 dependencies = [
     "bleak",
-    "https://github.com/LowellInstruments/ble.git",
     "PyQt6",
     "setproctitle",
-    "pyqtgraph"
+    "pyqtgraph",
+    "plotly",
+    "toml",
+    "https://github.com/LowellInstruments/ble.git",
+    "https://github.com/LowellInstruments/lix.git",
 ]

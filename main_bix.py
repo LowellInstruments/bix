@@ -9,7 +9,7 @@ from PyQt6.QtWebEngineCore import QWebEngineSettings
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
-    QFileDialog, QMessageBox,
+    QFileDialog, QMessageBox, QMenu,
 )
 from bix.utils import (
     mac_test,
@@ -26,8 +26,6 @@ from ble.ble import *
 from ble.ble_linux import ble_linux_disconnect_by_mac
 import toml
 import sys
-import matplotlib
-matplotlib.use('QtAgg')
 import pyqtgraph as pg
 from datetime import datetime
 import plotly.graph_objects as go
@@ -365,12 +363,89 @@ class Bix(QMainWindow, Ui_MainWindow):
 
     @dec_gui_busy
     def on_click_btn_scf(self, _):
-        d = self.dialog_import_file_profile()
-        if not d:
-            return
+        # d = self.dialog_import_file_profile()
+        # if not d:
+        #     return
+        self.context_menu_scf.exec(_.globalPos())
+
+
+    @dec_gui_busy
+    def on_click_btn_scf_slow(self, _):
+        d = create_profile_dictionary()
+        d['RVN'] = "00004"
+        d['PFM'] = "00001"
+        d['SPN'] = "00001"
+        d['SPT'] = "00060"
+        d['DRO'] = "00004"
+        d['DRU'] = "00004"
+        d['DRF'] = "00001"
+        d['DSO'] = "14400"
+        d['DSU'] = "00600"
         self.table.clear()
         global_set('table_profile', d['profiling'])
-        self.wrk('wb_scf')
+        self.wrk([
+            'wb_scf',
+            'wb_gcf'
+        ])
+
+
+    @dec_gui_busy
+    def on_click_btn_scf_mid(self, _):
+        d = create_profile_dictionary()
+        d['RVN'] = "00004"
+        d['PFM'] = "00001"
+        d['SPN'] = "00001"
+        d['SPT'] = "00060"
+        d['DRO'] = "00002"
+        d['DRU'] = "00002"
+        d['DRF'] = "00001"
+        d['DSO'] = "07200"
+        d['DSU'] = "00300"
+        self.table.clear()
+        global_set('table_profile', d['profiling'])
+        self.wrk([
+            'wb_scf',
+            'wb_gcf'
+        ])
+
+
+    @dec_gui_busy
+    def on_click_btn_scf_fast(self, _):
+        d = create_profile_dictionary()
+        d['RVN'] = "00004"
+        d['PFM'] = "00001"
+        d['SPN'] = "00001"
+        d['SPT'] = "00060"
+        d['DRO'] = "00002"
+        d['DRU'] = "00002"
+        d['DRF'] = "00001"
+        d['DSO'] = "03600"
+        d['DSU'] = "00060"
+        self.table.clear()
+        global_set('table_profile', d['profiling'])
+        self.wrk([
+            'wb_scf',
+            'wb_gcf'
+        ])
+
+    @dec_gui_busy
+    def on_click_btn_scf_fixed_5_min(self, _):
+        d = create_profile_dictionary()
+        d['RVN'] = "00004"
+        d['PFM'] = "00000"
+        d['SPN'] = "00001"
+        d['SPT'] = "00300"
+        d['DRO'] = "00002"
+        d['DRU'] = "00002"
+        d['DRF'] = "00001"
+        d['DSO'] = "03600"
+        d['DSU'] = "00060"
+        self.table.clear()
+        global_set('table_profile', d['profiling'])
+        self.wrk([
+            'wb_scf',
+            'wb_gcf'
+        ])
 
 
     @dec_gui_busy
@@ -503,6 +578,16 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_gec.clicked.connect(self.on_click_btn_gec)
         self.btn_mux.clicked.connect(self.on_click_btn_mux)
         self.btn_plot.clicked.connect(self.on_click_btn_plot)
+        # context SCF menu
+        self.context_menu_scf = QMenu(self)
+        _scf_slow = self.context_menu_scf.addAction("profile slow")
+        _scf_mid = self.context_menu_scf.addAction("profile mid")
+        _scf_fast = self.context_menu_scf.addAction("profile fast")
+        _scf_fixed_5_min = self.context_menu_scf.addAction("profile fixed_5_min")
+        _scf_slow.triggered.connect(self.on_click_btn_scf_slow)
+        _scf_mid.triggered.connect(self.on_click_btn_scf_mid)
+        _scf_fast.triggered.connect(self.on_click_btn_scf_fast)
+        _scf_fixed_5_min.triggered.connect(self.on_click_btn_scf_fixed_5_min)
 
 
         # plots of pressure, temperature, CSV files
@@ -525,6 +610,8 @@ class Bix(QMainWindow, Ui_MainWindow):
 
         # debug: uncomment when needed
         self.btn_test.setVisible(False)
+
+
         # be sure we are disconnected
         # todo: remove this
         ble_linux_disconnect_by_mac(global_get('mac'))

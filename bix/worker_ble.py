@@ -7,8 +7,6 @@ from lix.lix import parse_file_lid_v5
 
 
 
-# todo: manage python versions here
-# loop = asyncio.get_event_loop()
 loop = asyncio.new_event_loop()
 
 
@@ -19,13 +17,20 @@ class WorkerBle(QRunnable):
         self.signals.error.emit(f'error {e}')
 
 
-    async def wb_download(self):
+
+    async def _bad_we_are_running(self, s):
         rv, v = await cmd_sts()
         if rv:
-            self._ser('sts')
-            return
+            self._ser(f'sts while {s}')
+            return True
         if v == 'running':
-            self._ser('download while running')
+            self._ser(f'{s} while running')
+            return True
+        return False
+
+
+    async def wb_download(self):
+        if await self._bad_we_are_running('download'):
             return
 
         rv, d = await cmd_dir()
@@ -48,7 +53,7 @@ class WorkerBle(QRunnable):
                 return
             time.sleep(1)
             print(f'downloading file {i + 1} / {n}')
-            self.signals.download.emit(f'file {i + 1} / {n}')
+            self.signals.download.emit(f'getting\nfile {i + 1} of {n}')
             rv, data = await cmd_dwl(size)
             if rv:
                 self._ser('dwl')
@@ -60,7 +65,6 @@ class WorkerBle(QRunnable):
             time.sleep(1)
 
             # convert
-            # todo: maybe as thread?
             if dst_filename.endswith('.lid'):
                 bn = os.path.basename(dst_filename)
                 print(f'BIX converting {bn}')
@@ -71,6 +75,7 @@ class WorkerBle(QRunnable):
                     print(f'error converting {dst_filename} -> {ex}')
 
         self.signals.done.emit()
+
 
 
     async def wb_connect(self):
@@ -124,13 +129,9 @@ class WorkerBle(QRunnable):
 
 
     async def wb_run(self):
-        rv, v = await cmd_sts()
-        if rv:
-            self._ser('sts')
+        if await self._bad_we_are_running('RUN'):
             return
-        if v == 'running':
-            self._ser('RUN while already running')
-            return
+
         rv = await cmd_stm()
         if rv:
             self._ser('stm')
@@ -164,12 +165,7 @@ class WorkerBle(QRunnable):
 
 
     async def wb_mts(self):
-        rv, v = await cmd_sts()
-        if rv:
-            self._ser('sts')
-            return
-        if v == 'running':
-            self._ser('MTS while running')
+        if await self._bad_we_are_running('MTS'):
             return
         rv = await cmd_mts()
         if rv:
@@ -179,12 +175,7 @@ class WorkerBle(QRunnable):
 
 
     async def wb_gec(self):
-        rv, v = await cmd_sts()
-        if rv:
-            self._ser('sts')
-            return
-        if v == 'running':
-            self._ser('GEC while running')
+        if await self._bad_we_are_running('GEC'):
             return
         rv, v = await cmd_gec()
         if rv:
@@ -228,12 +219,7 @@ class WorkerBle(QRunnable):
 
 
     async def wb_frm(self):
-        rv, v = await cmd_sts()
-        if rv:
-            self._ser('sts')
-            return
-        if v == 'running':
-            self._ser('FRM while running')
+        if await self._bad_we_are_running('format'):
             return
         rv = await cmd_frm()
         if rv:
@@ -297,12 +283,7 @@ class WorkerBle(QRunnable):
 
 
     async def wb_gcc(self):
-        rv, v = await cmd_sts()
-        if rv:
-            self._ser('sts')
-            return
-        if v == 'running':
-            self._ser('gcc while running')
+        if await self._bad_we_are_running('GCC'):
             return
         rv, s = await cmd_gcc()
         if rv:
@@ -313,12 +294,7 @@ class WorkerBle(QRunnable):
 
 
     async def wb_gcf(self):
-        rv, v = await cmd_sts()
-        if rv:
-            self._ser('sts')
-            return
-        if v == 'running':
-            self._ser('GCF while running')
+        if await self._bad_we_are_running('GCF'):
             return
         rv, s = await cmd_gcf()
         if rv:
@@ -329,12 +305,7 @@ class WorkerBle(QRunnable):
 
 
     async def wb_scc(self):
-        rv, v = await cmd_sts()
-        if rv:
-            self._ser('sts')
-            return
-        if v == 'running':
-            self._ser('SCC while running')
+        if await self._bad_we_are_running('SCC'):
             return
         d = global_get('table_calibration')
         rv = 0
@@ -358,12 +329,7 @@ class WorkerBle(QRunnable):
 
 
     async def wb_scf(self):
-        rv, v = await cmd_sts()
-        if rv:
-            self._ser('sts')
-            return
-        if v == 'running':
-            self._ser('SCF while running')
+        if await self._bad_we_are_running('SCF'):
             return
         d = global_get('table_profile')
         rv = 0
@@ -382,12 +348,7 @@ class WorkerBle(QRunnable):
 
 
     async def wb_beh(self):
-        rv, v = await cmd_sts()
-        if rv:
-            self._ser('sts')
-            return
-        if v == 'running':
-            self._ser('BEH while running')
+        if await self._bad_we_are_running('BEH'):
             return
         d = global_get('table_behavior')
         for k, v in d.items():
