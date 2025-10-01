@@ -1,9 +1,9 @@
 import os
 import pandas as pd
-from PyQt6 import QtGui
+from PyQt6 import QtGui, QtCore
 from PyQt6.QtCore import (
     QThreadPool,
-    QTimer, QUrl,
+    QTimer, QUrl, QPoint,
 )
 from PyQt6.QtWebEngineCore import QWebEngineSettings
 from PyQt6.QtWidgets import (
@@ -303,10 +303,8 @@ class Bix(QMainWindow, Ui_MainWindow):
     @dec_gui_busy
     def on_click_btn_connect(self, _):
         mac = global_get('mac')
-        if mac == mac_test():
-            self.lbl_connecting.setText(f'connecting hard-coded {mac}')
-        else:
-            self.lbl_connecting.setText(f'connecting {mac}')
+        s = 'hard-coded ' if mac == mac_test() else ''
+        self.lbl_connecting.setText(f'connecting {s}{mac}')
         self.wrk([
             'wb_connect',
             'wb_sensors',
@@ -397,7 +395,11 @@ class Bix(QMainWindow, Ui_MainWindow):
         # d = self.dialog_import_file_profile()
         # if not d:
         #     return
-        self.context_menu_scf.exec(_.globalPos())
+        bp = self.btn_scf.mapToGlobal(QtCore.QPoint(0, 0))
+        x = bp.x() + 25
+        y = bp.y() + 25
+        p = QPoint(x, y)
+        self.context_menu_scf.exec(p)
 
 
     @dec_gui_busy
