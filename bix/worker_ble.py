@@ -271,11 +271,12 @@ class WorkerBle(QRunnable):
             # todo: do accelerometer
 
         if g_glt == 'CTD':
-            rv, v = await cmd_gsc()
-            if rv:
-                self._ser('gsc')
-                return
-            d['gsc'] = v
+            pass
+            # rv, v = await cmd_gsc()
+            # if rv:
+            #     self._ser('gsc')
+            #     return
+            # d['gsc'] = v
 
         if g_glt.startswith('DO'):
             rv, v = await cmd_gdx()
