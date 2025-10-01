@@ -1,3 +1,4 @@
+import asyncio
 import os
 from PyQt6.QtCore import QRunnable, pyqtSlot
 from bix.utils import WorkerSignals, FOL_BIL, global_get, global_set
@@ -7,8 +8,8 @@ from lix.lix import parse_file_lid_v5
 
 
 
-loop = asyncio.new_event_loop()
-
+# loop = asyncio.new_event_loop()
+loop = asyncio.get_event_loop()
 
 
 class WorkerBle(QRunnable):
@@ -197,14 +198,8 @@ class WorkerBle(QRunnable):
         if i == 0:
             s = f'MUX {i} = V1 V2'
         elif i == 1:
-            s = f'MUX {i} = V2 V1'
-        elif i == 2:
-            s = f'MUX {i} = C2 C1'
-        elif i == 3:
-            s = f'MUX {i} = C1 C2'
-        elif i == 4:
             s = f'MUX {i} = all shorted'
-        elif i == 5:
+        elif i == 2:
             s = f'MUX {i} = all open'
         self.signals.result.emit(s)
 
