@@ -48,6 +48,7 @@ def global_get(k):
 
 class WorkerSignals(QObject):
     connected = pyqtSignal()
+    cannot_connect = pyqtSignal(str)
     disconnected = pyqtSignal()
     info = pyqtSignal(object)
     error = pyqtSignal(str)

@@ -30,8 +30,9 @@ import pyqtgraph as pg
 from datetime import datetime
 import plotly.graph_objects as go
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-
-
+from lix.ascii85 import ascii85_to_num as a2n
+from lix.pressure import LixFileConverterP
+from lix.temperature import LixFileConverterT
 
 os.makedirs(FOL_BIL, exist_ok=True)
 
@@ -153,13 +154,17 @@ class Bix(QMainWindow, Ui_MainWindow):
 
     def slot_signal_connected(self):
         self.pages.setCurrentIndex(1)
-        print('GUI connected')
         self.lbl_connecting.setText('')
 
 
     def slot_signal_disconnected(self):
+        self.lbl_connecting.setText('')
         self.pages.setCurrentIndex(0)
-        print('GUI disconnected')
+
+
+    def slot_signal_cannot_connect(self, mac):
+        self.pages.setCurrentIndex(0)
+        self.lbl_connecting.setText(f'can\'t connect {mac}')
 
 
     def slot_signal_info(self, d: dict):
@@ -187,20 +192,40 @@ class Bix(QMainWindow, Ui_MainWindow):
             self.lbl_gsp.setVisible(True)
             self.lbl_acc.setVisible(True)
 
+            # do conversion with default values
             v = str(d['gst'])
-            s = f'Temperature\n\n{v}\n\nCelsius'
+            tmr = a2n("7VZ<2")
+            tma = a2n("3g?gQ")
+            tmb = a2n("3HFKd")
+            tmc = a2n("1S#M`")
+            tmd = a2n("1ps%'")
+            lct = LixFileConverterT(tma, tmb, tmc, tmd, tmr)
+            vtc = '{:.2f}'.format(float(lct.convert(d['gst'])))
+            s = f'Temperature\n\n{vtc} °C\n({v})'
             self.lbl_gst.setText(s)
-            print(f'GST {v}')
+            print(f'GST {v} counts')
+            print(f'GST {vtc} Celsius')
+
 
             v = str(d['gsp'])
-            s = f'Pressure\n\n{v}\n\ndbar'
+            pra = a2n("5po'i")
+            prb = a2n("!!!!!")
+            lcp = LixFileConverterP(pra, prb)
+            vpd = '{:.2f}'.format(lcp.convert(d['gsp'])[0])
+            s = f'Pressure\n\n{vpd} dbar\n({v})'
             self.lbl_gsp.setText(s)
-            print(f'GSP {v}')
+            print(f'GSP {v} counts')
+            print(f'GSP {vpd} decibar')
 
-            v = str(d['acc'])
-            s = f'Accelerometer\n\n{v}'
+
+            vax = str(d['gax'])
+            vay = str(d['gay'])
+            vaz = str(d['gaz'])
+            s = f'Accelerometer\n\n{vax}\n{vay}\n{vaz}'
             self.lbl_acc.setText(s)
-            print(f'ACC {v}')
+            print(f'ACC {vax}, {vay}, {vaz}')
+
+
 
         if v == 'CTD':
             self.lbl_gsc.setVisible(True)
@@ -253,6 +278,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         # calls constructor in Worker class and bind its signals
         w = WorkerBle(ls_s)
         w.signals.connected.connect(self.slot_signal_connected)
+        w.signals.cannot_connect.connect(self.slot_signal_cannot_connect)
         w.signals.info.connect(self.slot_signal_info)
         w.signals.sensors.connect(self.slot_signal_sensors)
         w.signals.done.connect(self.slot_signal_done)

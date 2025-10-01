@@ -1,22 +1,18 @@
-import asyncio
 import os
 from PyQt6.QtCore import QRunnable, pyqtSlot
 from bix.utils import WorkerSignals, FOL_BIL, global_get, global_set
 from ble.ble import *
 from lix.ascii85 import num_to_ascii85
-from lix.lix import parse_file_lid_v5
+from lix.lix import parse_lid_v2_data_file, decode_accelerometer_measurement
 
+loop = asyncio.new_event_loop()
 
-
-# loop = asyncio.new_event_loop()
-loop = asyncio.get_event_loop()
 
 
 class WorkerBle(QRunnable):
 
     def _ser(self, e: str):
         self.signals.error.emit(f'error {e}')
-
 
 
     async def _bad_we_are_running(self, s):
@@ -71,9 +67,11 @@ class WorkerBle(QRunnable):
                 print(f'BIX converting {bn}')
                 try:
                     self.signals.converting.emit()
-                    parse_file_lid_v5(dst_filename)
+                    parse_lid_v2_data_file(dst_filename)
                 except (Exception, ) as ex:
                     print(f'error converting {dst_filename} -> {ex}')
+                    self._ser('converting')
+                    return
 
         self.signals.done.emit()
 
@@ -84,6 +82,7 @@ class WorkerBle(QRunnable):
         rv = await connect_by_mac(mac)
         if rv == 0:
             self._ser('connecting')
+            self.signals.cannot_connect.emit(mac)
             return
         self.signals.connected.emit()
 
@@ -245,9 +244,11 @@ class WorkerBle(QRunnable):
             'bat': '',
             'gst': '',
             'gsp': '',
-            'acc': '',
             'gsc': '',
-            'gdo': ''
+            'gdo': '',
+            'gax': '',
+            'gay': '',
+            'gaz': '',
         }
 
         rv, v = await cmd_bat()
@@ -268,7 +269,19 @@ class WorkerBle(QRunnable):
                 self._ser('gsp')
                 return
             d['gsp'] = v
-            # todo: do accelerometer
+
+            rv, v = await cmd_gab()
+            if rv:
+                self._ser('gab')
+                return
+            vax = decode_accelerometer_measurement(v[-6:-4])
+            vay = decode_accelerometer_measurement(v[-4:-2])
+            vaz = decode_accelerometer_measurement(v[-2:])
+            d['gax'] = vax
+            d['gay'] = vay
+            d['gaz'] = vaz
+
+
 
         if g_glt == 'CTD':
             pass
