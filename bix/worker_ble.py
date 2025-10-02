@@ -12,7 +12,7 @@ loop = asyncio.new_event_loop()
 class WorkerBle(QRunnable):
 
     def _ser(self, e: str):
-        self.signals.error.emit(f'error {e}')
+        self.signals.error.emit(f'error, {e}')
 
 
     async def _bad_we_are_running(self, s):
