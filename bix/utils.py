@@ -17,11 +17,9 @@ def mac_test():
 
 
 g_d = {
-    'mac': mac_test(),
     'table_calibration': {},
     'table_profile': {},
     'table_behavior': {},
-    'glt': '',
     'busy': 0
 }
 

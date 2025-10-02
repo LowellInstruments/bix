@@ -55,3 +55,26 @@ def fill_profile_table(app, d):
     h.setDefaultAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
     app.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
 
+
+
+def fill_logger_aliases_table(app, d):
+    app.tbl_known_macs.clear()
+    app.tbl_known_macs.setColumnCount(2)
+    app.tbl_known_macs.setHorizontalHeaderLabels(['MAC address', 'alias'])
+    app.tbl_known_macs.setRowCount(len(d))
+
+    for i, k_v in enumerate(d.items()):
+        k, v = k_v
+        _it = QTableWidgetItem(k)
+        _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        app.tbl_known_macs.setItem(i, 0, _it)
+        _it = QTableWidgetItem(v)
+        _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        app.tbl_known_macs.setItem(i, 1, _it)
+
+    h = app.tbl_known_macs.horizontalHeader()
+    h.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+    h.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+    h.setDefaultAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+    app.tbl_known_macs.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+

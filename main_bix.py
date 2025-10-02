@@ -20,7 +20,7 @@ from bix.utils import (
 )
 from bix.gui.gui import Ui_MainWindow
 import setproctitle
-from bix.gui.tables import fill_calibration_table, fill_profile_table
+from bix.gui.tables import fill_calibration_table, fill_profile_table, fill_logger_aliases_table
 from bix.worker_ble import WorkerBle
 from ble.ble import *
 from ble.ble_linux import ble_linux_disconnect_by_mac
@@ -57,6 +57,17 @@ class MyPlotWidget(pg.PlotWidget):
 class Bix(QMainWindow, Ui_MainWindow):
 
     @staticmethod
+    def gui_show_error_message(desc, solution):
+        m = QMessageBox()
+        m.setIcon(QMessageBox.Icon.Critical)
+        m.setText(desc)
+        m.setInformativeText(solution)
+        m.setWindowTitle("BIX Error")
+        m.setStandardButtons(QMessageBox.StandardButton.Ok)
+        m.exec()
+
+
+    @staticmethod
     def _get_version():
         d = toml.load('pyproject.toml')
         return d['project']['version']
@@ -73,7 +84,10 @@ class Bix(QMainWindow, Ui_MainWindow):
             print(f'trying to load TOML file {bn}')
             return toml.load(p)
         except (Exception, ) as e:
-            self.lst_known_macs.addItem(f'error: opening TOML file {bn} -> {e}')
+            self.gui_show_error_message(
+                desc=f'error: opening TOML file {bn}',
+                solution=f'fix {e}'
+            )
 
 
     def dialog_import_macs(self):
@@ -132,8 +146,6 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     def slot_signal_gcc(self, s):
-        self.lbl_table.setText('Table calibration contents')
-        # todo: move all this inside function fill()
         s = s[6:]
         d = create_calibration_dictionary()
         for i, v in enumerate(d.items()):
@@ -143,7 +155,6 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     def slot_signal_gcf(self, s):
-        self.lbl_table.setText('Table profile contents')
         s = s[6:]
         d = create_profile_dictionary()
         for i, v in enumerate(d.items()):
@@ -164,6 +175,7 @@ class Bix(QMainWindow, Ui_MainWindow):
 
     def slot_signal_cannot_connect(self, mac):
         self.pages.setCurrentIndex(0)
+        self.lbl_connecting.setStyleSheet('color: red')
         self.lbl_connecting.setText(f'can\'t connect {mac}')
 
 
@@ -178,8 +190,6 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     def slot_signal_sensors(self, d: dict):
-
-        # show some sensors, some not
         v = self.lbl_glt.text()
         self.lbl_gst.setVisible(False)
         self.lbl_gsp.setVisible(False)
@@ -274,9 +284,8 @@ class Bix(QMainWindow, Ui_MainWindow):
         return wrapper
 
 
-    def wrk(self, ls_s):
-        # calls constructor in Worker class and bind its signals
-        w = WorkerBle(ls_s)
+    def wrk(self, ls_operations, d_args=None):
+        w = WorkerBle(ls_operations, d_args)
         w.signals.connected.connect(self.slot_signal_connected)
         w.signals.cannot_connect.connect(self.slot_signal_cannot_connect)
         w.signals.info.connect(self.slot_signal_info)
@@ -294,21 +303,26 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.threadpool.start(w)
 
 
-    def on_click_lst_known_macs(self):
-        _it = self.lst_known_macs.currentItem().text()
-        m = str(_it.split(' - ')[0])
-        global_set('mac', m)
-
-
     @dec_gui_busy
     def on_click_btn_connect(self, _):
-        mac = global_get('mac')
-        s = 'hard-coded ' if mac == mac_test() else ''
+        mac = mac_test()
+        s = 'hard-coded '
+        r = self.tbl_known_macs.currentRow()
+        if r:
+            mac = self.tbl_known_macs.item(r, 0).text()
+            s = ''
+
+        # be sure we are disconnected
+        ble_linux_disconnect_by_mac(mac)
+
         self.lbl_connecting.setText(f'connecting {s}{mac}')
+        self.lbl_connecting.setStyleSheet('color: black')
         self.wrk([
             'wb_connect',
             'wb_sensors',
-            'wb_gcc'])
+            'wb_gcc'],
+            {'mac': mac}
+        )
 
 
     @dec_gui_busy
@@ -318,7 +332,8 @@ class Bix(QMainWindow, Ui_MainWindow):
 
     @dec_gui_busy
     def on_click_btn_sensors(self, _):
-        self.wrk('wb_sensors')
+        glt = self.lbl_glt.text()
+        self.wrk('wb_sensors', {'glt': glt})
 
 
     @dec_gui_busy
@@ -414,12 +429,10 @@ class Bix(QMainWindow, Ui_MainWindow):
         d['DRF'] = "00001"
         d['DSO'] = "14400"
         d['DSU'] = "00600"
-        self.table.clear()
-        global_set('table_profile', d['profiling'])
-        self.wrk([
-            'wb_scf',
-            'wb_gcf'
-        ])
+        self.wrk(
+            ['wb_scf', 'wb_gcf'],
+            d['profiling']
+        )
 
 
     @dec_gui_busy
@@ -434,12 +447,10 @@ class Bix(QMainWindow, Ui_MainWindow):
         d['DRF'] = "00001"
         d['DSO'] = "07200"
         d['DSU'] = "00300"
-        self.table.clear()
-        global_set('table_profile', d['profiling'])
-        self.wrk([
-            'wb_scf',
-            'wb_gcf'
-        ])
+        self.wrk(
+            ['wb_scf', 'wb_gcf'],
+            d['profiling']
+        )
 
 
     @dec_gui_busy
@@ -454,12 +465,11 @@ class Bix(QMainWindow, Ui_MainWindow):
         d['DRF'] = "00001"
         d['DSO'] = "03600"
         d['DSU'] = "00060"
-        self.table.clear()
-        global_set('table_profile', d['profiling'])
-        self.wrk([
-            'wb_scf',
-            'wb_gcf'
-        ])
+        self.wrk(
+            ['wb_scf', 'wb_gcf'],
+            d['profiling']
+        )
+
 
     @dec_gui_busy
     def on_click_btn_scf_fixed_5_min(self, _):
@@ -473,12 +483,10 @@ class Bix(QMainWindow, Ui_MainWindow):
         d['DRF'] = "00001"
         d['DSO'] = "03600"
         d['DSU'] = "00060"
-        self.table.clear()
-        global_set('table_profile', d['profiling'])
-        self.wrk([
-            'wb_scf',
-            'wb_gcf'
-        ])
+        self.wrk(
+            ['wb_scf', 'wb_gcf'],
+            d['profiling']
+        )
 
 
     @dec_gui_busy
@@ -486,9 +494,10 @@ class Bix(QMainWindow, Ui_MainWindow):
         d = self.dialog_import_file_calibration()
         if not d:
             return
-        self.table.clear()
-        global_set('table_calibration', d['calibration'])
-        self.wrk('wb_scc')
+        self.wrk(
+            ['wb_scc', 'wb_gcc'],
+            d['calibration']
+        )
 
 
     @dec_gui_busy
@@ -496,8 +505,10 @@ class Bix(QMainWindow, Ui_MainWindow):
         d = self.dialog_import_file_behavior()
         if not d:
             return
-        global_set('table_behavior', d['behavior'])
-        self.wrk('wb_beh')
+        self.wrk(
+            ['wb_beh'],
+            d['behavior']
+        )
 
 
     def on_click_btn_plot(self, _):
@@ -533,10 +544,8 @@ class Bix(QMainWindow, Ui_MainWindow):
         d = self.dialog_import_macs()
         if not d:
             return
-        self.lst_known_macs.clear()
         d = d['aliases']
-        for k, v in d.items():
-            self.lst_known_macs.addItem(f'{k} - {v}')
+        fill_logger_aliases_table(self, d)
 
 
     def timer_cb(self):
@@ -587,6 +596,13 @@ class Bix(QMainWindow, Ui_MainWindow):
             QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
         self.lay_maps.addWidget(self.maps_webview)
 
+        # auto-import MAC aliases file
+        if os.path.exists(DEF_ALIASES_FILE_PATH):
+            print(f'auto-importing alias file {DEF_ALIASES_FILE_PATH}')
+            d = toml.load(DEF_ALIASES_FILE_PATH)
+            d = d['aliases']
+            fill_logger_aliases_table(self, d)
+
 
 
         # buttons
@@ -598,7 +614,6 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_sws.clicked.connect(self.on_click_btn_stop)
         self.btn_sts.clicked.connect(self.on_click_btn_sts)
         self.btn_frm.clicked.connect(self.on_click_btn_frm)
-        self.lst_known_macs.itemClicked.connect(self.on_click_lst_known_macs)
         self.btn_led.clicked.connect(self.on_click_btn_led)
         self.btn_gcc.clicked.connect(self.on_click_btn_gcc)
         self.btn_gcf.clicked.connect(self.on_click_btn_gcf)
@@ -631,25 +646,8 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.gr.setVisible(False)
 
 
-        # auto-import MAC aliases file
-        self.lst_known_macs.clear()
-        if os.path.exists(DEF_ALIASES_FILE_PATH):
-            print(f'auto-importing alias file {DEF_ALIASES_FILE_PATH}')
-            d = toml.load(DEF_ALIASES_FILE_PATH)
-            d = d['aliases']
-            for k, v in d.items():
-                self.lst_known_macs.addItem(f'{k} - {v}')
-
-
-
         # debug: uncomment when needed
         self.btn_test.setVisible(False)
-
-
-        # be sure we are disconnected
-        # todo: remove this
-        ble_linux_disconnect_by_mac(global_get('mac'))
-
 
         # maps
         my_map = go.Scattermap(

@@ -40,7 +40,7 @@
         <item>
          <widget class="QStackedWidget" name="pages">
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="page_1">
            <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -72,7 +72,7 @@
                     <item>
                      <widget class="QLabel" name="lbl_import_macs">
                       <property name="text">
-                       <string>Known Loggers</string>
+                       <string>List of loggers</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -80,7 +80,14 @@
                      </widget>
                     </item>
                     <item>
-                     <widget class="QListWidget" name="lst_known_macs"/>
+                     <widget class="QTableWidget" name="tbl_known_macs">
+                      <property name="selectionBehavior">
+                       <enum>QAbstractItemView::SelectRows</enum>
+                      </property>
+                      <attribute name="verticalHeaderVisible">
+                       <bool>false</bool>
+                      </attribute>
+                     </widget>
                     </item>
                    </layout>
                   </item>

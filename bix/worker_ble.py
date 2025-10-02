@@ -1,6 +1,6 @@
 import os
 from PyQt6.QtCore import QRunnable, pyqtSlot
-from bix.utils import WorkerSignals, FOL_BIL, global_get, global_set
+from bix.utils import WorkerSignals, FOL_BIL, global_set
 from ble.ble import *
 from lix.ascii85 import num_to_ascii85
 from lix.lix import parse_lid_v2_data_file, decode_accelerometer_measurement
@@ -76,56 +76,11 @@ class WorkerBle(QRunnable):
         self.signals.done.emit()
 
 
-
-    async def wb_connect(self):
-        mac = global_get('mac')
-        rv = await connect_by_mac(mac)
-        if rv == 0:
-            self._ser('connecting')
-            self.signals.cannot_connect.emit(mac)
-            return
-        self.signals.connected.emit()
-
-        d = {}
-        rv, v = await cmd_sts()
-        if rv:
-            self._ser('sts')
-            return
-        d['sts'] = v
-
-        rv, v = await cmd_glt()
-        if rv:
-            self._ser('glt')
-            return
-        d['glt'] = v
-        global_set('glt', v)
-
-        rv, v = await cmd_gfv()
-        if rv:
-            self._ser('gfv')
-            return
-        d['gfv'] = v
-
-        rv, v = await cmd_mac()
-        if rv:
-            self._ser('mac')
-            return
-        d['mac'] = v
-
-        rv, v = await cmd_rli()
-        if rv:
-            self._ser('rli')
-            return
-        d['sn'] = v['SN']
-
-        self.signals.info.emit(d)
-        self.signals.done.emit()
-
-
     async def wb_disconnect(self):
         await disconnect()
         self.signals.disconnected.emit()
         self.signals.done.emit()
+
 
 
     async def wb_run(self):
@@ -257,7 +212,7 @@ class WorkerBle(QRunnable):
             return
         d['bat'] = v
 
-        g_glt = global_get('glt')
+        g_glt = self.d_args('glt')
         if g_glt in ('TDO', 'CTD'):
             rv, v = await cmd_gst()
             if rv:
@@ -327,7 +282,7 @@ class WorkerBle(QRunnable):
     async def wb_scc(self):
         if await self._bad_we_are_running('SCC'):
             return
-        d = global_get('table_calibration')
+        d = self.d_args('table_calibration')
         rv = 0
         for k, v in d.items():
             # todo: see we want to enforce MAC
@@ -351,7 +306,7 @@ class WorkerBle(QRunnable):
     async def wb_scf(self):
         if await self._bad_we_are_running('SCF'):
             return
-        d = global_get('table_profile')
+        d = self.d_args('table_profile')
         rv = 0
         for k, v in d.items():
             rv = await cmd_scf(k, v)
@@ -370,7 +325,7 @@ class WorkerBle(QRunnable):
     async def wb_beh(self):
         if await self._bad_we_are_running('BEH'):
             return
-        d = global_get('table_behavior')
+        d = self.d_args('table_behavior')
         for k, v in d.items():
             rv = await cmd_beh(k, v)
             if rv:
@@ -379,8 +334,54 @@ class WorkerBle(QRunnable):
         self.signals.done.emit()
 
 
+
+    async def wb_connect(self):
+        mac = self.d_args['mac']
+        rv = await connect_by_mac(mac)
+        if rv == 0:
+            self._ser('connecting')
+            self.signals.cannot_connect.emit(mac)
+            return
+        self.signals.connected.emit()
+
+        d = {}
+        rv, v = await cmd_sts()
+        if rv:
+            self._ser('sts')
+            return
+        d['sts'] = v
+
+        rv, v = await cmd_glt()
+        if rv:
+            self._ser('glt')
+            return
+        d['glt'] = v
+
+        rv, v = await cmd_gfv()
+        if rv:
+            self._ser('gfv')
+            return
+        d['gfv'] = v
+
+        rv, v = await cmd_mac()
+        if rv:
+            self._ser('mac')
+            return
+        d['mac'] = v
+
+        rv, v = await cmd_rli()
+        if rv:
+            self._ser('rli')
+            return
+        d['sn'] = v['SN']
+
+        self.signals.info.emit(d)
+        self.signals.done.emit()
+
+
     @pyqtSlot()
     def run(self):
+        print('thread args', self.d_args)
         for fn in self.ls_fn:
             global_set('busy', 1)
             print("thread start")
@@ -389,7 +390,7 @@ class WorkerBle(QRunnable):
             global_set('busy', 0)
 
 
-    def __init__(self, ls_gui_cmd, *args, **kwargs):
+    def __init__(self, ls_gui_cmd, d_args):
         super().__init__()
         d = {
             'wb_connect': self.wb_connect,
@@ -416,6 +417,5 @@ class WorkerBle(QRunnable):
             ls_gui_cmd = [ls_gui_cmd]
         for i in ls_gui_cmd:
             self.ls_fn.append(d[i])
-        self.args = args
-        self.kwargs = kwargs
+        self.d_args = d_args
         self.signals = WorkerSignals()
