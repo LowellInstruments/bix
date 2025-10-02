@@ -1,16 +1,16 @@
+import os
 import pathlib
 from PyQt6.QtCore import QObject, pyqtSignal
-
 
 
 
 def mac_test():
     # mt = "D0:2E:AB:D9:29:48"  # TDO bread
     # mt = "F0:5E:CD:25:92:F1"  # TDO 2508700 *
-    mt = "F0:5E:CD:25:A1:16"    # TDO 2508701
+    # mt = "F0:5E:CD:25:A1:16"    # TDO 2508701
     # mt = "F0:5E:CD:25:92:9D"    # TDO 2508702
     # mt = "F0:5E:CD:25:92:95"    # TDO 2508703 *
-    # mt = "F0:5E:CD:25:95:D4"    # CTD
+    mt = "F0:5E:CD:25:95:D4"    # CTD
     # mt = "F0:5E:CD:25:92:EA" # CTD_JED
     return mt
 
@@ -26,6 +26,8 @@ PATH_ALIAS_FILE = pathlib.Path.home() / 'Downloads' / 'bil_v2_logger_aliases.tom
 RVN_SCC_4 = "00004"
 FOL_BIL = str(pathlib.Path.home() / 'Downloads/dl_bil_v5')
 DEF_ALIASES_FILE_PATH = f'{FOL_BIL}/bil_v5_logger_aliases.toml'
+os.makedirs(FOL_BIL, exist_ok=True)
+
 
 
 
@@ -48,13 +50,14 @@ class WorkerSignals(QObject):
     info = pyqtSignal(object)
     error = pyqtSignal(str)
     sensors = pyqtSignal(object)
-    status = pyqtSignal(str)
+    logger_status = pyqtSignal(str)
     done = pyqtSignal()
     gcc = pyqtSignal(object)
     gcf = pyqtSignal(object)
     download = pyqtSignal(str)
-    converting = pyqtSignal()
     result = pyqtSignal(str)
+    gui_status = pyqtSignal(str)
+
 
 
 

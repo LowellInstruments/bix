@@ -16,7 +16,7 @@ from bix.utils import (
     FOL_BIL,
     create_profile_dictionary,
     create_calibration_dictionary,
-    DEF_ALIASES_FILE_PATH, global_set, global_get
+    DEF_ALIASES_FILE_PATH, global_get
 )
 from bix.gui.gui import Ui_MainWindow
 import setproctitle
@@ -34,7 +34,6 @@ from lix.ascii85 import ascii85_to_num as a2n
 from lix.pressure import LixFileConverterP
 from lix.temperature import LixFileConverterT
 
-os.makedirs(FOL_BIL, exist_ok=True)
 
 
 
@@ -125,9 +124,9 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.lbl_result.setText(s)
 
 
-    def slot_signal_converting(self):
+    def slot_signal_gui_status(self, s):
         self.lbl_busy.setStyleSheet('color: yellow')
-        self.lbl_busy.setText('converting')
+        self.lbl_busy.setText(s)
 
 
     def slot_signal_download(self, s):
@@ -227,11 +226,10 @@ class Bix(QMainWindow, Ui_MainWindow):
             print(f'GSP {v} counts')
             print(f'GSP {vpd} decibar')
 
-
             vax = str(d['gax'])
             vay = str(d['gay'])
             vaz = str(d['gaz'])
-            s = f'Accelerometer\n\n{vax}\n{vay}\n{vaz}'
+            s = f'Accelerometer\nX = {vax}\nY = {vay}\nZ = {vaz}'
             self.lbl_acc.setText(s)
             print(f'ACC {vax}, {vay}, {vaz}')
 
@@ -292,10 +290,10 @@ class Bix(QMainWindow, Ui_MainWindow):
         w.signals.sensors.connect(self.slot_signal_sensors)
         w.signals.done.connect(self.slot_signal_done)
         w.signals.result.connect(self.slot_signal_result)
-        w.signals.converting.connect(self.slot_signal_converting)
+        w.signals.gui_status.connect(self.slot_signal_gui_status)
         w.signals.disconnected.connect(self.slot_signal_disconnected)
         w.signals.error.connect(self.slot_signal_error)
-        w.signals.status.connect(self.slot_signal_status)
+        w.signals.logger_status.connect(self.slot_signal_status)
         w.signals.gcc.connect(self.slot_signal_gcc)
         w.signals.gcf.connect(self.slot_signal_gcf)
         w.signals.download.connect(self.slot_signal_download)
@@ -306,16 +304,23 @@ class Bix(QMainWindow, Ui_MainWindow):
     @dec_gui_busy
     def on_click_btn_connect(self, _):
         mac = mac_test()
-        s = 'hard-coded '
+        h_s = 'hard-coded '
         r = self.tbl_known_macs.currentRow()
-        if r:
+        if r and r != -1:
             mac = self.tbl_known_macs.item(r, 0).text()
-            s = ''
+            h_s = ''
+
 
         # be sure we are disconnected
-        ble_linux_disconnect_by_mac(mac)
+        if ble_linux_is_mac_already_connected(mac):
+            s = f'pre-disconnecting mac {mac}'
+            print(s)
+            self.lbl_connecting.setText(s)
+            QApplication.processEvents()
+            ble_linux_disconnect_by_mac(mac)
 
-        self.lbl_connecting.setText(f'connecting {s}{mac}')
+
+        self.lbl_connecting.setText(f'connecting {h_s}{mac}')
         self.lbl_connecting.setStyleSheet('color: black')
         self.wrk([
             'wb_connect',
@@ -429,10 +434,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         d['DRF'] = "00001"
         d['DSO'] = "14400"
         d['DSU'] = "00600"
-        self.wrk(
-            ['wb_scf', 'wb_gcf'],
-            d['profiling']
-        )
+        self.wrk(['wb_scf', 'wb_gcf'], d)
 
 
     @dec_gui_busy
@@ -447,10 +449,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         d['DRF'] = "00001"
         d['DSO'] = "07200"
         d['DSU'] = "00300"
-        self.wrk(
-            ['wb_scf', 'wb_gcf'],
-            d['profiling']
-        )
+        self.wrk(['wb_scf', 'wb_gcf'], d)
 
 
     @dec_gui_busy
@@ -465,10 +464,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         d['DRF'] = "00001"
         d['DSO'] = "03600"
         d['DSU'] = "00060"
-        self.wrk(
-            ['wb_scf', 'wb_gcf'],
-            d['profiling']
-        )
+        self.wrk(['wb_scf', 'wb_gcf'], d)
 
 
     @dec_gui_busy
@@ -483,10 +479,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         d['DRF'] = "00001"
         d['DSO'] = "03600"
         d['DSU'] = "00060"
-        self.wrk(
-            ['wb_scf', 'wb_gcf'],
-            d['profiling']
-        )
+        self.wrk(['wb_scf', 'wb_gcf'], d)
 
 
     @dec_gui_busy
@@ -574,7 +567,7 @@ class Bix(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(Bix, self).__init__()
         self.setupUi(self)
-        self.setWindowTitle("BIX")
+        self.setWindowTitle("BIX - Lowell Instruments")
         self.threadpool = QThreadPool()
         self.setFixedWidth(1024)
         self.setFixedHeight(768)

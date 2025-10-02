@@ -66,7 +66,7 @@ class WorkerBle(QRunnable):
                 bn = os.path.basename(dst_filename)
                 print(f'BIX converting {bn}')
                 try:
-                    self.signals.converting.emit()
+                    self.signals.gui_status.emit('converting')
                     parse_lid_v2_data_file(dst_filename)
                 except (Exception, ) as ex:
                     print(f'error converting {dst_filename} -> {ex}')
@@ -105,7 +105,7 @@ class WorkerBle(QRunnable):
         if rv:
             self._ser('rws')
             return
-        self.signals.status.emit('running')
+        self.signals.logger_status.emit('running')
         self.signals.done.emit()
 
 
@@ -115,7 +115,7 @@ class WorkerBle(QRunnable):
         if rv:
             self._ser('sws')
             return
-        self.signals.status.emit('stopped')
+        self.signals.logger_status.emit('stopped')
         self.signals.done.emit()
 
 
@@ -174,7 +174,7 @@ class WorkerBle(QRunnable):
         if rv:
             self._ser('sts')
             return
-        self.signals.status.emit(v)
+        self.signals.logger_status.emit(v)
         self.signals.done.emit()
 
 
@@ -217,7 +217,12 @@ class WorkerBle(QRunnable):
             return
         d['bat'] = v
 
-        g_glt = self.d_args('glt')
+        rv, g_glt = await cmd_glt()
+        if rv:
+            self._ser('glt')
+            return
+        d['glt'] = v
+
         if g_glt in ('TDO', 'CTD'):
             rv, v = await cmd_gst()
             if rv:
@@ -287,10 +292,9 @@ class WorkerBle(QRunnable):
     async def wb_scc(self):
         if await self._bad_we_are_running('SCC'):
             return
-        d = self.d_args('table_calibration')
+        d = self.d_args
         rv = 0
         for k, v in d.items():
-            # todo: see we want to enforce MAC
             if k == 'MAC':
                 continue
             if type(v) is not str:
@@ -311,7 +315,7 @@ class WorkerBle(QRunnable):
     async def wb_scf(self):
         if await self._bad_we_are_running('SCF'):
             return
-        d = self.d_args('table_profile')
+        d = self.d_args
         rv = 0
         for k, v in d.items():
             rv = await cmd_scf(k, v)
@@ -330,7 +334,7 @@ class WorkerBle(QRunnable):
     async def wb_beh(self):
         if await self._bad_we_are_running('BEH'):
             return
-        d = self.d_args('table_behavior')
+        d = self.d_args
         for k, v in d.items():
             rv = await cmd_beh(k, v)
             if rv:
@@ -349,6 +353,8 @@ class WorkerBle(QRunnable):
             return
         self.signals.connected.emit()
 
+        # we are connected, get logger info
+        self.signals.gui_status.emit('querying')
         d = {}
         rv, v = await cmd_sts()
         if rv:
@@ -381,7 +387,6 @@ class WorkerBle(QRunnable):
         d['sn'] = v['SN']
 
         self.signals.info.emit(d)
-        self.signals.done.emit()
 
 
     @pyqtSlot()
