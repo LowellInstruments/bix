@@ -135,7 +135,7 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     def slot_signal_error(self, e):
-        print(f'logger {e}')
+        print(f'slot {e}')
         self.lbl_busy.setStyleSheet('color: red')
         self.lbl_busy.setText(f'{e}')
 

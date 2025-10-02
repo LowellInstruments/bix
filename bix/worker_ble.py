@@ -206,9 +206,14 @@ class WorkerBle(QRunnable):
             'gaz': '',
         }
 
+        # todo: do a decorator of this and apply everywhere
+        if not is_connected():
+            self._ser('not connected while sensors')
+            return
+
         rv, v = await cmd_bat()
         if rv:
-            self._ser('bat')
+            self._ser('bat while sensors')
             return
         d['bat'] = v
 
@@ -381,12 +386,10 @@ class WorkerBle(QRunnable):
 
     @pyqtSlot()
     def run(self):
-        print('thread args', self.d_args)
         for fn in self.ls_fn:
+            print('th start', fn.__name__)
             global_set('busy', 1)
-            print("thread start")
             loop.run_until_complete(fn())
-            print("thread complete")
             global_set('busy', 0)
 
 
