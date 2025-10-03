@@ -195,8 +195,10 @@ class WorkerBle(QRunnable):
         if rv:
             self._ser('gec')
             return
+
         print('GEC rv, v', rv, v)
         self.signals.done.emit()
+        self.signals.result.emit(f'GEC {v}')
 
 
     async def wb_mux(self):

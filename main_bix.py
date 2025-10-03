@@ -285,6 +285,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         if glt.startswith('DO'):
             v *= .4545
 
+        v = int(v)
         s = f'{v} mV'
         self.lbl_bat.setText(s)
         print(f'BAT {s}')
