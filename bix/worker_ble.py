@@ -158,6 +158,17 @@ class WorkerBle(QRunnable):
         self.signals.result.emit(s)
 
 
+    async def wb_gci(self):
+        rv, v = await cmd_gci()
+        if rv:
+            self._ser('gci')
+            return
+        print('GCI rv, v', rv, v)
+        self.signals.done.emit()
+        i = int(v)
+        self.signals.result.emit(f'GCI = {i}')
+
+
     async def wb_osc(self):
         rv, v = await cmd_osc()
         if rv:
@@ -206,7 +217,6 @@ class WorkerBle(QRunnable):
             'gaz': '',
         }
 
-        # todo: do a decorator of this and apply everywhere
         if not is_connected():
             self._ser('not connected while sensors')
             return
@@ -268,6 +278,9 @@ class WorkerBle(QRunnable):
 
 
     async def wb_gcc(self):
+        if not is_connected():
+            self._ser('not connected while GCC')
+            return
         if await self._bad_we_are_running('GCC'):
             return
         rv, s = await cmd_gcc()
@@ -420,6 +433,7 @@ class WorkerBle(QRunnable):
             'wb_gec': self.wb_gec,
             'wb_mux': self.wb_mux,
             'wb_osc': self.wb_osc,
+            'wb_gci': self.wb_gci
         }
         self.ls_fn = []
         if type(ls_gui_cmd) is str:

@@ -23,7 +23,7 @@ import setproctitle
 from bix.gui.tables import fill_calibration_table, fill_profile_table, fill_logger_aliases_table
 from bix.worker_ble import WorkerBle
 from ble.ble import *
-from ble.ble_linux import ble_linux_disconnect_by_mac
+from ble.ble_linux import ble_linux_disconnect_by_mac, ble_linux_get_bluez_version
 import toml
 import sys
 import pyqtgraph as pg
@@ -54,6 +54,17 @@ class MyPlotWidget(pg.PlotWidget):
 
 
 class Bix(QMainWindow, Ui_MainWindow):
+
+    def gui_show_bluez_version(self):
+        if platform.system() != 'Linux':
+            return
+        v = ble_linux_get_bluez_version()
+        if v < '5.66':
+            self.lbl_bluez_version.setStyleSheet('color: red')
+            self.lbl_bluez_version.setText(f'caution: bluez v{v} < 5.66')
+        else:
+            self.lbl_bluez_version.setText(f'bluez v{v}')
+
 
     @staticmethod
     def gui_show_error_message(desc, solution):
@@ -189,14 +200,14 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     def slot_signal_sensors(self, d: dict):
-        v = self.lbl_glt.text()
+        glt = self.lbl_glt.text()
         self.lbl_gst.setVisible(False)
         self.lbl_gsp.setVisible(False)
         self.lbl_acc.setVisible(False)
         self.lbl_gsc.setVisible(False)
         self.lbl_gdo.setVisible(False)
 
-        if v in ('TDO', 'CTD'):
+        if glt in ('TDO', 'CTD'):
             self.lbl_gst.setVisible(True)
             self.lbl_gsp.setVisible(True)
             self.lbl_acc.setVisible(True)
@@ -235,7 +246,7 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
 
-        if v == 'CTD':
+        if glt == 'CTD':
             self.lbl_gsc.setVisible(True)
             v = d['gsc']
             print(f'GSC {v}')
@@ -251,7 +262,9 @@ class Bix(QMainWindow, Ui_MainWindow):
             s = f'Conductivity\nV12 {c0}\nV21 {c1}\nC21 {c2}\nC12 {c3}\n'
             self.lbl_gsc.setText(s)
 
-        if v.startswith('DO'):
+
+
+        if glt.startswith('DO'):
             self.lbl_gdo.setVisible(True)
             v = str(d['gdo'])
             s = f'DOC\n\n{v}\n\nmg/l'
@@ -259,10 +272,19 @@ class Bix(QMainWindow, Ui_MainWindow):
             print(f'GDO {v}')
 
 
-        v = str(d['bat'])
+
+        # these values match DDH
+        v = d['bat']
+        if glt == 'TDO':
+            v *= .5454
+        if glt == 'CTD':
+            v *= .5454
+        if glt.startswith('DO'):
+            v *= .4545
+
         s = f'{v} mV'
         self.lbl_bat.setText(s)
-        print(f'BAT {v}')
+        print(f'BAT {s}')
 
 
 
@@ -365,6 +387,11 @@ class Bix(QMainWindow, Ui_MainWindow):
     @dec_gui_busy
     def on_click_btn_osc(self, _):
         self.wrk('wb_osc')
+
+
+    @dec_gui_busy
+    def on_click_btn_gci(self, _):
+        self.wrk('wb_gci')
 
 
     @dec_gui_busy
@@ -577,6 +604,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.pages.setCurrentIndex(0)
         self.tabs.setCurrentIndex(0)
         self.lbl_gui_version.setText('v' + self._get_version())
+        self.gui_show_bluez_version()
         if os.path.exists(DEV_SHM_DL_PROGRESS):
             os.unlink(DEV_SHM_DL_PROGRESS)
         self.progressBar.setValue(0)
@@ -588,6 +616,8 @@ class Bix(QMainWindow, Ui_MainWindow):
         settings.setAttribute(
             QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
         self.lay_maps.addWidget(self.maps_webview)
+
+
 
         # auto-import MAC aliases file
         if os.path.exists(DEF_ALIASES_FILE_PATH):
@@ -619,6 +649,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_gec.clicked.connect(self.on_click_btn_gec)
         self.btn_mux.clicked.connect(self.on_click_btn_mux)
         self.btn_osc.clicked.connect(self.on_click_btn_osc)
+        self.btn_gci.clicked.connect(self.on_click_btn_gci)
         self.btn_plot.clicked.connect(self.on_click_btn_plot)
         # context SCF menu
         self.context_menu_scf = QMenu(self)
