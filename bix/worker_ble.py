@@ -49,6 +49,7 @@ class WorkerBle(QRunnable):
                 self._ser('dwg')
                 return
             time.sleep(1)
+            el = int(time.time())
             print(f'downloading file {i + 1} / {n}')
             self.signals.download.emit(f'getting\nfile {i + 1} of {n}')
             rv, data = await cmd_dwl(size)
@@ -59,10 +60,13 @@ class WorkerBle(QRunnable):
             dst_filename = f'{FOL_BIL}/{name}'
             with open(dst_filename, 'wb') as f:
                 f.write(data)
+            el = int(time.time()) - el
+            print('download speed = {} KB/s'.format((size / 1000) / el))
+
             time.sleep(1)
 
             # convert
-            if dst_filename.endswith('.lid'):
+            if dst_filename.endswith('.lid') and 'dummy' not in dst_filename:
                 bn = os.path.basename(dst_filename)
                 print(f'BIX converting {bn}')
                 try:
@@ -245,9 +249,9 @@ class WorkerBle(QRunnable):
                 return
             d['gsp'] = v
 
-            rv, v = await cmd_gab()
+            rv, v = await cmd_gsa()
             if rv:
-                self._ser('gab')
+                self._ser('gsa')
                 return
             vax = decode_accelerometer_measurement(v[-6:-4])
             vay = decode_accelerometer_measurement(v[-4:-2])

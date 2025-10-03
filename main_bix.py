@@ -1,22 +1,25 @@
 import os
+from pathlib import Path
+
 import pandas as pd
 from PyQt6 import QtGui, QtCore
 from PyQt6.QtCore import (
     QThreadPool,
     QTimer, QUrl, QPoint,
 )
+from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWebEngineCore import QWebEngineSettings
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
-    QFileDialog, QMessageBox, QMenu,
+    QFileDialog, QMessageBox, QMenu, QGridLayout,
 )
 from bix.utils import (
     mac_test,
     FOL_BIL,
     create_profile_dictionary,
     create_calibration_dictionary,
-    DEF_ALIASES_FILE_PATH, global_get
+    DEF_ALIASES_FILE_PATH, global_get, PATH_RELATIVE_ICON_FOLDER
 )
 from bix.gui.gui import Ui_MainWindow
 import setproctitle
@@ -332,6 +335,10 @@ class Bix(QMainWindow, Ui_MainWindow):
             mac = self.tbl_known_macs.item(r, 0).text()
             h_s = ''
 
+        # style
+        self.lbl_connecting.setStyleSheet('color: blue')
+
+
 
         # be sure we are disconnected
         if ble_linux_is_mac_already_connected(mac):
@@ -343,7 +350,6 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
         self.lbl_connecting.setText(f'connecting {h_s}{mac}')
-        self.lbl_connecting.setStyleSheet('color: black')
         self.wrk([
             'wb_connect',
             'wb_sensors',
@@ -412,13 +418,13 @@ class Bix(QMainWindow, Ui_MainWindow):
     @dec_gui_busy
     def on_click_btn_frm(self, _):
         dlg = QMessageBox(self)
-        dlg.setWindowTitle("Are you sure?")
+        dlg.setWindowTitle('Be careful with this format command')
         dlg.setText("Delete all files in logger?")
-        dlg.setStandardButtons(
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
-        dlg.setIcon(QMessageBox.Icon.Question)
-        if dlg.exec() == QMessageBox.StandardButton.Yes:
+        dlg.setIcon(QMessageBox.Icon.Warning)
+        dlg.setStandardButtons(QMessageBox.StandardButton.Ok |
+                               QMessageBox.StandardButton.Cancel)
+        dlg.setFixedWidth(400)
+        if dlg.exec() == QMessageBox.StandardButton.Ok:
             self.wrk('wb_frm')
 
 
