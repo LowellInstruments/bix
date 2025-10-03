@@ -616,16 +616,6 @@ class Bix(QMainWindow, Ui_MainWindow):
             y1 = df[m].values
             m = 'Pressure (dbar)'
             y2 = df[m].values
-            # self.gr.plot(xf, y2, pen=None, symbol='x', symbolSize=5, symbolPen='r')
-            p2 = pg.ViewBox()
-            p2.addItem(pg.PlotCurveItem(xf, y2, pen=None, symbol='x', symbolSize=5, symbolPen='r'))
-            self.gr.scene().addItem(p2)
-            self.gr.getAxis('right').linkToView(p2)  # Link the right AxisItem to p2
-            p2.setXLink(self.gr)  # Link p2's X-axis to p1's X-axis
-            p2.setGeometry(self.gr.getViewBox().sceneBoundingRect())
-            # ensure X-axis synchronization
-            p2.linkedViewChanged(self.gr.getViewBox(), p2.XAxis)
-            # self.gr.plot(xf, y2, pen=None, symbol='x', symbolSize=5, symbolPen='r')
             self.gr.plot(xf, y1, pen=None, symbol='o', symbolSize=5, symbolPen='b')
 
 
