@@ -22,7 +22,7 @@
     <item>
      <widget class="QTabWidget" name="tabs">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="laytab">
        <attribute name="title">
@@ -960,8 +960,11 @@ BEH</string>
            <layout class="QHBoxLayout" name="horizontalLayout_9">
             <item>
              <widget class="QLabel" name="lbl_p1">
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
               <property name="text">
-               <string/>
+               <string>&lt;&gt;</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -970,8 +973,11 @@ BEH</string>
             </item>
             <item>
              <widget class="QLabel" name="lbl_p2">
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
               <property name="text">
-               <string/>
+               <string>&lt;&gt;</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>

@@ -52,6 +52,11 @@ class MyPlotWidget(pg.PlotWidget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.scene().sigMouseClicked.connect(self.mouse_clicked)
+        self.clicked_x = None
+        self.clicked_y1 = None
+        self.clicked_y2 = None
+        self.clicked_i = 0
+
 
     def mouse_clicked(self, mouse_click_event):
         print('clicked plot 0x{:x}, event: {}'.format(id(self), mouse_click_event))
@@ -60,6 +65,12 @@ class MyPlotWidget(pg.PlotWidget):
         ts = self.mapToView(ev.pos()).x()
         print(f't = {datetime.fromtimestamp(ts)}')
         print('y = {}'.format(self.mapToView(ev.pos()).y()))
+        self.clicked_x = self.mapToView(ev.pos()).x()
+        self.clicked_i = (self.clicked_i + 1) % 2
+        if self.clicked_i == 0:
+            self.clicked_y1 = self.mapToView(ev.pos()).y()
+        else:
+            self.clicked_y2 = self.mapToView(ev.pos()).y()
 
 
 
@@ -616,17 +627,22 @@ class Bix(QMainWindow, Ui_MainWindow):
         y1 = []
         y2 = []
         if glt == 'TDO':
-            m = 'Temperature (C)'
-            y1 = df[m].values
-            m = 'Pressure (dbar)'
-            y2 = df[m].values
+            m1 = 'Temperature (C)'
+            y1 = df[m1].values
+            m2 = 'Pressure (dbar)'
+            y2 = df[m2].values
             p1.setLabels(left='axis 1')
             p2 = pg.ViewBox()
             p1.showAxis('right')
             p1.scene().addItem(p2)
             p1.getAxis('right').linkToView(p2)
             p2.setXLink(p1)
-            p1.getAxis('right').setLabel('axis2', color='#0000ff')
+            p1.getAxis('left').setLabel(m1, color='red')
+            p1.getAxis('left').setTextPen(color='red')
+            p1.getAxis('right').setLabel(m2, color='blue')
+            p1.getAxis('right').setTextPen(color='blue')
+
+
 
         def updateViews():
             p2.setGeometry(p1.vb.sceneBoundingRect())
@@ -667,17 +683,35 @@ class Bix(QMainWindow, Ui_MainWindow):
         except FileNotFoundError:
             self.progressBar.setValue(0)
 
+
         # animated busy
         s = self.lbl_busy.text().split(' ')[0]
         if global_get('busy') and 'done' not in s:
             v = (int(time.time()) % 3) + 1
             self.lbl_busy.setText(s + ' ' + ('.' * v))
 
+
         # always on correct tab
         if not is_connected():
             if self.pages.currentIndex() != 0:
                 print('moving to proper logger GUI page')
                 self.pages.setCurrentIndex(0)
+
+        # show points clicked in plot
+        _cx = self.pw.clicked_x
+        _cy1 = self.pw.clicked_y1
+        _cy2 = self.pw.clicked_y2
+        s = f'{_cx}, {_cy1}'
+        self.lbl_p1.setText(s)
+        s = f'{_cx}, {_cy2}'
+        self.lbl_p2.setText(s)
+
+        p1 = self.pw.plotItem
+        p2 = pg.ViewBox()
+        p2.setXLink(p1)
+        if _cx:
+            p1.plot([10], [25], symbol='x', pen=None, size=10, symbolPen='green')
+        # p2.addItem(pg.PlotDataItem(xf, y2, symbol='o', pen=None, size=3, symbolPen='blue'))
 
 
 
