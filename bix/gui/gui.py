@@ -491,7 +491,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         self.tabs.setCurrentIndex(0)
-        self.pages.setCurrentIndex(0)
+        self.pages.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -513,7 +513,7 @@ class Ui_MainWindow(object):
         self.lbl_mac.setText(_translate("MainWindow", "MAC"))
         self.label_4.setText(_translate("MainWindow", "Firmware"))
         self.lbl_gfv.setText(_translate("MainWindow", "GFV"))
-        self.label_5.setText(_translate("MainWindow", "Battery mV"))
+        self.label_5.setText(_translate("MainWindow", "Battery"))
         self.lbl_bat.setText(_translate("MainWindow", "BAT"))
         self.btn_rws.setText(_translate("MainWindow", "RUN"))
         self.btn_sws.setText(_translate("MainWindow", "STOP"))

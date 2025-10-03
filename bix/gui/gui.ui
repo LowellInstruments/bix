@@ -44,7 +44,7 @@
         <item>
          <widget class="QStackedWidget" name="pages">
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="page_1">
            <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -389,7 +389,7 @@
                     <item>
                      <widget class="QLabel" name="label_5">
                       <property name="text">
-                       <string>Battery mV</string>
+                       <string>Battery</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
