@@ -19,14 +19,21 @@ from bix.utils import (
     FOL_BIL,
     create_profile_dictionary,
     create_calibration_dictionary,
-    DEF_ALIASES_FILE_PATH, global_get, PATH_RELATIVE_ICON_FOLDER
+    DEF_ALIASES_FILE_PATH, global_get,
 )
 from bix.gui.gui import Ui_MainWindow
 import setproctitle
-from bix.gui.tables import fill_calibration_table, fill_profile_table, fill_logger_aliases_table
+from bix.gui.tables import (
+    fill_calibration_table,
+    fill_profile_table,
+    fill_logger_aliases_table
+)
 from bix.worker_ble import WorkerBle
 from ble.ble import *
-from ble.ble_linux import ble_linux_disconnect_by_mac, ble_linux_get_bluez_version
+from ble.ble_linux import (
+    ble_linux_disconnect_by_mac,
+    ble_linux_get_bluez_version
+)
 import toml
 import sys
 import pyqtgraph as pg
@@ -139,7 +146,7 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     def slot_signal_gui_status(self, s):
-        self.lbl_busy.setStyleSheet('color: yellow')
+        self.lbl_busy.setStyleSheet('color: gray;')
         self.lbl_busy.setText(s)
 
 
@@ -337,7 +344,7 @@ class Bix(QMainWindow, Ui_MainWindow):
             h_s = ''
 
         # style
-        self.lbl_connecting.setStyleSheet('color: blue')
+        self.lbl_connecting.setStyleSheet('color: rgb(87, 170, 255);')
 
 
 
@@ -426,6 +433,11 @@ class Bix(QMainWindow, Ui_MainWindow):
     @dec_gui_busy
     def on_click_btn_led(self, _):
         self.wrk('wb_led')
+
+
+    @dec_gui_busy
+    def on_click_btn_log(self, _):
+        self.wrk('wb_log')
 
 
     @dec_gui_busy
@@ -662,6 +674,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_sts.clicked.connect(self.on_click_btn_sts)
         self.btn_frm.clicked.connect(self.on_click_btn_frm)
         self.btn_led.clicked.connect(self.on_click_btn_led)
+        self.btn_log.clicked.connect(self.on_click_btn_log)
         self.btn_gcc.clicked.connect(self.on_click_btn_gcc)
         self.btn_gcf.clicked.connect(self.on_click_btn_gcf)
         self.btn_scc.clicked.connect(self.on_click_btn_scc)

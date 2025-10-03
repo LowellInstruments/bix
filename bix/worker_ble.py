@@ -266,6 +266,16 @@ class WorkerBle(QRunnable):
         self.signals.done.emit()
 
 
+    async def wb_log(self):
+        rv, v = await cmd_log()
+        if rv:
+            self._ser('log')
+            return
+        self.signals.done.emit()
+        self.signals.result.emit(f'LOG {v}')
+
+
+
     async def wb_sensors(self):
         d = {
             'bat': '',
@@ -484,6 +494,7 @@ class WorkerBle(QRunnable):
             'wb_sts': self.wb_sts,
             'wb_frm': self.wb_frm,
             'wb_led': self.wb_led,
+            'wb_log': self.wb_log,
             'wb_gcc': self.wb_gcc,
             'wb_gcf': self.wb_gcf,
             'wb_scc': self.wb_scc,
