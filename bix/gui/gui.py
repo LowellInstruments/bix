@@ -416,7 +416,7 @@ class Ui_MainWindow(object):
         spacerItem6 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         self.horizontalLayout_12.addItem(spacerItem6)
         self.label_7 = QtWidgets.QLabel(parent=self.frame)
-        self.label_7.setMaximumSize(QtCore.QSize(200, 80))
+        self.label_7.setMaximumSize(QtCore.QSize(220, 80))
         self.label_7.setFrameShape(QtWidgets.QFrame.Shape.Box)
         self.label_7.setText("")
         self.label_7.setPixmap(QtGui.QPixmap("res/logo_li_big.jpg"))

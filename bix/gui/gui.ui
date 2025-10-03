@@ -880,7 +880,7 @@ BEH</string>
                     <widget class="QLabel" name="label_7">
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>220</width>
                        <height>80</height>
                       </size>
                      </property>
