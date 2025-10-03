@@ -568,30 +568,76 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     def on_click_btn_plot(self, _):
-        p = self.dialog_import_file_csv_to_plot()
-        # p = '/home/kaz/Downloads/dl_bil_v2/F0-5E-CD-25-92-F1/2508700_BIL_20250923_184053_TDO.csv'
+
+        # point to CSV file or hard-code it
+        # p = self.dialog_import_file_csv_to_plot()
+        p = '/home/kaz/Downloads/dl_bil_v5/2508701_BIL_20250930_161818_TDO.csv'
         if not p:
             return
+        bn = os.path.basename(p)
+
+
+        # remove OLD graph
         self.lay.removeWidget(self.gr)
         self.gr = MyPlotWidget(
             # viewBox=CustomViewBox(),
             axisItems={'bottom': pg.DateAxisItem()})
         self.lay.addWidget(self.gr)
+        self.gr.setBackground("white")
+
+
+
+        # infer logger type from filename
+        glt = 'DOX'
+        if 'TDO' in bn:
+            glt = 'TDO'
+        elif 'CTD' in bn:
+            glt = 'CTD'
+
+
+        # load CSV data, transform X-axis to seconds
         df = pd.read_csv(p)
         x = df['ISO 8601 Time'].values
-        y = df['raw ADC Pressure'].values
         xf = []
         for i in x:
             dt = datetime.strptime(i, '%Y-%m-%dT%H:%M:%S.000Z').timestamp()
             xf.append(dt)
-        # pen None removes the line
+
+
+        # set pen to None to remove the line between plotted data points
         pen = pg.mkPen(color=(255, 0, 0))
-        self.gr.plot(xf, y, pen=None, symbol='o', symbolSize=5, name="My Data")
-        self.gr.setBackground("white")
+
+
+        # ----------------
+        # plot data points
+        # ----------------
+        if glt == 'TDO':
+            m = 'Temperature (C)'
+            y1 = df[m].values
+            m = 'Pressure (dbar)'
+            y2 = df[m].values
+            # self.gr.plot(xf, y2, pen=None, symbol='x', symbolSize=5, symbolPen='r')
+            p2 = pg.ViewBox()
+            p2.addItem(pg.PlotCurveItem(xf, y2, pen=None, symbol='x', symbolSize=5, symbolPen='r'))
+            self.gr.scene().addItem(p2)
+            self.gr.getAxis('right').linkToView(p2)  # Link the right AxisItem to p2
+            p2.setXLink(self.gr)  # Link p2's X-axis to p1's X-axis
+            p2.setGeometry(self.gr.getViewBox().sceneBoundingRect())
+            # ensure X-axis synchronization
+            p2.linkedViewChanged(self.gr.getViewBox(), p2.XAxis)
+            # self.gr.plot(xf, y2, pen=None, symbol='x', symbolSize=5, symbolPen='r')
+            self.gr.plot(xf, y1, pen=None, symbol='o', symbolSize=5, symbolPen='b')
+
+
+
+
+        # set title of the plot
         bn = os.path.basename(p)
         self.lbl_plot.setText(bn)
-        self.gr.setVisible(True)
 
+
+        # allow mouse events in the plot
+        self.gr.setVisible(True)
         view_box = self.gr.plotItem.vb
         view_box.setMouseEnabled(x=True, y=True)
 
