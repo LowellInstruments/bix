@@ -329,7 +329,7 @@ class Bix(QMainWindow, Ui_MainWindow):
     @dec_gui_busy
     def on_click_btn_connect(self, _):
         mac = mac_test()
-        h_s = 'hard-coded '
+        h_s = 'hard-coded'
         r = self.tbl_known_macs.currentRow()
         if r and r != -1:
             mac = self.tbl_known_macs.item(r, 0).text()
@@ -342,14 +342,14 @@ class Bix(QMainWindow, Ui_MainWindow):
 
         # be sure we are disconnected
         if ble_linux_is_mac_already_connected(mac):
-            s = f'pre-disconnecting mac {mac}'
+            s = f'pre-leave {mac}'
             print(s)
             self.lbl_connecting.setText(s)
             QApplication.processEvents()
             ble_linux_disconnect_by_mac(mac)
 
 
-        self.lbl_connecting.setText(f'connecting {h_s}{mac}')
+        self.lbl_connecting.setText(f'connecting {mac} {h_s}')
         self.wrk([
             'wb_connect',
             'wb_sensors',
@@ -367,12 +367,6 @@ class Bix(QMainWindow, Ui_MainWindow):
     def on_click_btn_sensors(self, _):
         glt = self.lbl_glt.text()
         self.wrk('wb_sensors', {'glt': glt})
-
-
-    @dec_gui_busy
-    def on_click_btn_download(self, _):
-        self.lbl_download.setText('')
-        self.wrk('wb_download')
 
 
     @dec_gui_busy
@@ -453,6 +447,29 @@ class Bix(QMainWindow, Ui_MainWindow):
         y = bp.y() + 25
         p = QPoint(x, y)
         self.context_menu_scf.exec(p)
+
+
+
+    @dec_gui_busy
+    def on_click_btn_download(self, _):
+        self.lbl_download.setText('')
+        bp = self.btn_download.mapToGlobal(QtCore.QPoint(0, 0))
+        x = bp.x() + 25
+        y = bp.y() + 25
+        p = QPoint(x, y)
+        self.context_menu_dl.exec(p)
+
+
+
+    @dec_gui_busy
+    def on_click_btn_download_normal(self, _):
+        self.wrk('wb_download_normal')
+
+
+    @dec_gui_busy
+    def on_click_btn_download_fast(self, _):
+        self.wrk('wb_download_fast')
+
 
 
     @dec_gui_busy
@@ -667,6 +684,12 @@ class Bix(QMainWindow, Ui_MainWindow):
         _scf_mid.triggered.connect(self.on_click_btn_scf_mid)
         _scf_fast.triggered.connect(self.on_click_btn_scf_fast)
         _scf_fixed_5_min.triggered.connect(self.on_click_btn_scf_fixed_5_min)
+        # context download menu
+        self.context_menu_dl = QMenu(self)
+        _dl_slow = self.context_menu_dl.addAction("download normal")
+        _dl_fast = self.context_menu_dl.addAction("download fast")
+        _dl_slow.triggered.connect(self.on_click_btn_download_normal)
+        _dl_fast.triggered.connect(self.on_click_btn_download_fast)
 
 
         # plots of pressure, temperature, CSV files

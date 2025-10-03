@@ -26,7 +26,7 @@ class WorkerBle(QRunnable):
         return False
 
 
-    async def wb_download(self):
+    async def wb_download_normal(self):
         if await self._bad_we_are_running('download'):
             return
 
@@ -51,7 +51,7 @@ class WorkerBle(QRunnable):
             time.sleep(1)
             el = int(time.time())
             print(f'downloading file {i + 1} / {n}')
-            self.signals.download.emit(f'getting\nfile {i + 1} of {n}')
+            self.signals.download.emit(f'get {name}\nfile {i + 1} of {n}')
             rv, data = await cmd_dwl(size)
             if rv:
                 self._ser('dwl')
@@ -62,6 +62,61 @@ class WorkerBle(QRunnable):
                 f.write(data)
             el = int(time.time()) - el
             print('download speed = {} KB/s'.format((size / 1000) / el))
+
+            time.sleep(1)
+
+            # convert
+            if dst_filename.endswith('.lid') and 'dummy' not in dst_filename:
+                bn = os.path.basename(dst_filename)
+                print(f'BIX converting {bn}')
+                try:
+                    self.signals.gui_status.emit('converting')
+                    parse_lid_v2_data_file(dst_filename)
+                except (Exception, ) as ex:
+                    print(f'error converting {dst_filename} -> {ex}')
+                    self._ser('converting')
+                    return
+
+        self.signals.done.emit()
+
+
+
+    async def wb_download_fast(self):
+        if await self._bad_we_are_running('download_fast'):
+            return
+
+        rv, d = await cmd_dir()
+        if rv:
+            self._ser('dir')
+            return
+        print('DIR d', d)
+        n = len(d)
+
+        if n == 0:
+            self.signals.download.emit('no files')
+            self.signals.done.emit()
+            return
+
+        for i, name_size in enumerate(d.items()):
+            name, size = name_size
+            rv = await cmd_dwg(name)
+            if rv:
+                self._ser('dwg')
+                return
+            time.sleep(1)
+            el = int(time.time())
+            print(f'downloading fast file {i + 1} / {n}')
+            self.signals.download.emit(f'get {name}\nfile {i + 1} of {n}')
+            rv, data = await cmd_dwf(size)
+            if rv:
+                self._ser('dwf')
+                return
+            print(f'saving fast {name}')
+            dst_filename = f'{FOL_BIL}/{name}'
+            with open(dst_filename, 'wb') as f:
+                f.write(data)
+            el = int(time.time()) - el
+            print('download fast speed = {} KB/s'.format((size / 1000) / el))
 
             time.sleep(1)
 
@@ -170,7 +225,7 @@ class WorkerBle(QRunnable):
         print('GCI rv, v', rv, v)
         self.signals.done.emit()
         i = int(v)
-        self.signals.result.emit(f'GCI = {i}')
+        self.signals.result.emit(f'GCI = {i} ms')
 
 
     async def wb_osc(self):
@@ -432,7 +487,8 @@ class WorkerBle(QRunnable):
             'wb_scc': self.wb_scc,
             'wb_scf': self.wb_scf,
             'wb_beh': self.wb_beh,
-            'wb_download': self.wb_download,
+            'wb_download_normal': self.wb_download_normal,
+            'wb_download_fast': self.wb_download_fast,
             'wb_mts': self.wb_mts,
             'wb_gec': self.wb_gec,
             'wb_mux': self.wb_mux,
