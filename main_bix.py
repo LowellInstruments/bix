@@ -571,19 +571,19 @@ class Bix(QMainWindow, Ui_MainWindow):
 
         # point to CSV file or hard-code it
         # p = self.dialog_import_file_csv_to_plot()
-        p = '/home/kaz/Downloads/dl_bil_v5/2508701_BIL_20250930_161818_TDO.csv'
-        if not p:
+        path_csv = '/home/kaz/Downloads/dl_bil_v5/2508701_BIL_20250930_161818_TDO.csv'
+        if not path_csv:
             return
-        bn = os.path.basename(p)
+        bn = os.path.basename(path_csv)
 
 
         # remove OLD graph
-        self.lay.removeWidget(self.gr)
-        self.gr = MyPlotWidget(
+        self.lay.removeWidget(self.pw)
+        self.pw = MyPlotWidget(
             # viewBox=CustomViewBox(),
             axisItems={'bottom': pg.DateAxisItem()})
-        self.lay.addWidget(self.gr)
-        self.gr.setBackground("white")
+        self.lay.addWidget(self.pw)
+        self.pw.setBackground("white")
 
 
 
@@ -596,7 +596,7 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
         # load CSV data, transform X-axis to seconds
-        df = pd.read_csv(p)
+        df = pd.read_csv(path_csv)
         x = df['ISO 8601 Time'].values
         xf = []
         for i in x:
@@ -611,24 +611,42 @@ class Bix(QMainWindow, Ui_MainWindow):
         # ----------------
         # plot data points
         # ----------------
+        p1 = self.pw.plotItem
+        p2 = None
+        y1 = []
+        y2 = []
         if glt == 'TDO':
             m = 'Temperature (C)'
             y1 = df[m].values
             m = 'Pressure (dbar)'
             y2 = df[m].values
-            self.gr.plot(xf, y1, pen=None, symbol='o', symbolSize=5, symbolPen='b')
+            p1.setLabels(left='axis 1')
+            p2 = pg.ViewBox()
+            p1.showAxis('right')
+            p1.scene().addItem(p2)
+            p1.getAxis('right').linkToView(p2)
+            p2.setXLink(p1)
+            p1.getAxis('right').setLabel('axis2', color='#0000ff')
 
+        def updateViews():
+            p2.setGeometry(p1.vb.sceneBoundingRect())
+            p2.linkedViewChanged(p1.vb, p2.XAxis)
+
+        updateViews()
+        p1.vb.sigResized.connect(updateViews)
+        p1.plot(xf, y1, symbol='x', pen=None, size=3, symbolPen='red')
+        p2.addItem(pg.PlotDataItem(xf, y2, symbol='o', pen=None, size=3, symbolPen='blue'))
 
 
 
         # set title of the plot
-        bn = os.path.basename(p)
+        bn = os.path.basename(path_csv)
         self.lbl_plot.setText(bn)
 
 
         # allow mouse events in the plot
-        self.gr.setVisible(True)
-        view_box = self.gr.plotItem.vb
+        self.pw.setVisible(True)
+        view_box = self.pw.plotItem.vb
         view_box.setMouseEnabled(x=True, y=True)
 
 
@@ -743,10 +761,10 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
         # plots of pressure, temperature, CSV files
-        self.gr = MyPlotWidget(
+        self.pw = MyPlotWidget(
             # viewBox=CustomViewBox(),
             axisItems={'bottom': pg.DateAxisItem()})
-        self.gr.setVisible(False)
+        self.pw.setVisible(False)
 
 
         # debug: uncomment when needed
