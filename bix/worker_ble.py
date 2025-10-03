@@ -392,10 +392,11 @@ class WorkerBle(QRunnable):
     @pyqtSlot()
     def run(self):
         for fn in self.ls_fn:
-            print('th start', fn.__name__)
+            print('th_start', fn.__name__)
             global_set('busy', 1)
             loop.run_until_complete(fn())
             global_set('busy', 0)
+            print('th_end', fn.__name__)
 
 
     def __init__(self, ls_gui_cmd, d_args):

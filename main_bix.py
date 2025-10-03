@@ -386,7 +386,7 @@ class Bix(QMainWindow, Ui_MainWindow):
     def on_click_btn_frm(self, _):
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Are you sure?")
-        dlg.setText("This deletes all files in  logger!")
+        dlg.setText("Delete all files in logger?")
         dlg.setStandardButtons(
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
