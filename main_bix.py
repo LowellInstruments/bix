@@ -1,29 +1,39 @@
 import os
+from pathlib import Path
+
 import pandas as pd
 from PyQt6 import QtGui, QtCore
 from PyQt6.QtCore import (
     QThreadPool,
     QTimer, QUrl, QPoint,
 )
+from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWebEngineCore import QWebEngineSettings
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
-    QFileDialog, QMessageBox, QMenu,
+    QFileDialog, QMessageBox, QMenu, QGridLayout,
 )
 from bix.utils import (
     mac_test,
     FOL_BIL,
     create_profile_dictionary,
     create_calibration_dictionary,
-    DEF_ALIASES_FILE_PATH, global_get
+    DEF_ALIASES_FILE_PATH, global_get,
 )
 from bix.gui.gui import Ui_MainWindow
 import setproctitle
-from bix.gui.tables import fill_calibration_table, fill_profile_table, fill_logger_aliases_table
+from bix.gui.tables import (
+    fill_calibration_table,
+    fill_profile_table,
+    fill_logger_aliases_table
+)
 from bix.worker_ble import WorkerBle
 from ble.ble import *
-from ble.ble_linux import ble_linux_disconnect_by_mac, ble_linux_get_bluez_version
+from ble.ble_linux import (
+    ble_linux_disconnect_by_mac,
+    ble_linux_get_bluez_version
+)
 import toml
 import sys
 import pyqtgraph as pg
@@ -42,6 +52,11 @@ class MyPlotWidget(pg.PlotWidget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.scene().sigMouseClicked.connect(self.mouse_clicked)
+        self.clicked_x = None
+        self.clicked_y1 = None
+        self.clicked_y2 = None
+        self.clicked_i = 0
+
 
     def mouse_clicked(self, mouse_click_event):
         print('clicked plot 0x{:x}, event: {}'.format(id(self), mouse_click_event))
@@ -50,6 +65,12 @@ class MyPlotWidget(pg.PlotWidget):
         ts = self.mapToView(ev.pos()).x()
         print(f't = {datetime.fromtimestamp(ts)}')
         print('y = {}'.format(self.mapToView(ev.pos()).y()))
+        self.clicked_x = self.mapToView(ev.pos()).x()
+        self.clicked_i = (self.clicked_i + 1) % 2
+        if self.clicked_i == 0:
+            self.clicked_y1 = self.mapToView(ev.pos()).y()
+        else:
+            self.clicked_y2 = self.mapToView(ev.pos()).y()
 
 
 
@@ -136,7 +157,7 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     def slot_signal_gui_status(self, s):
-        self.lbl_busy.setStyleSheet('color: yellow')
+        self.lbl_busy.setStyleSheet('color: gray;')
         self.lbl_busy.setText(s)
 
 
@@ -282,6 +303,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         if glt.startswith('DO'):
             v *= .4545
 
+        v = int(v)
         s = f'{v} mV'
         self.lbl_bat.setText(s)
         print(f'BAT {s}')
@@ -327,24 +349,27 @@ class Bix(QMainWindow, Ui_MainWindow):
     @dec_gui_busy
     def on_click_btn_connect(self, _):
         mac = mac_test()
-        h_s = 'hard-coded '
+        h_s = 'hard-coded'
         r = self.tbl_known_macs.currentRow()
         if r and r != -1:
             mac = self.tbl_known_macs.item(r, 0).text()
             h_s = ''
 
+        # style
+        self.lbl_connecting.setStyleSheet('color: rgb(87, 170, 255);')
+
+
 
         # be sure we are disconnected
         if ble_linux_is_mac_already_connected(mac):
-            s = f'pre-disconnecting mac {mac}'
+            s = f'pre-leave {mac}'
             print(s)
             self.lbl_connecting.setText(s)
             QApplication.processEvents()
             ble_linux_disconnect_by_mac(mac)
 
 
-        self.lbl_connecting.setText(f'connecting {h_s}{mac}')
-        self.lbl_connecting.setStyleSheet('color: black')
+        self.lbl_connecting.setText(f'connecting {mac} {h_s}')
         self.wrk([
             'wb_connect',
             'wb_sensors',
@@ -362,12 +387,6 @@ class Bix(QMainWindow, Ui_MainWindow):
     def on_click_btn_sensors(self, _):
         glt = self.lbl_glt.text()
         self.wrk('wb_sensors', {'glt': glt})
-
-
-    @dec_gui_busy
-    def on_click_btn_download(self, _):
-        self.lbl_download.setText('')
-        self.wrk('wb_download')
 
 
     @dec_gui_busy
@@ -413,19 +432,24 @@ class Bix(QMainWindow, Ui_MainWindow):
     @dec_gui_busy
     def on_click_btn_frm(self, _):
         dlg = QMessageBox(self)
-        dlg.setWindowTitle("Are you sure?")
+        dlg.setWindowTitle('Be careful with this format command')
         dlg.setText("Delete all files in logger?")
-        dlg.setStandardButtons(
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
-        dlg.setIcon(QMessageBox.Icon.Question)
-        if dlg.exec() == QMessageBox.StandardButton.Yes:
+        dlg.setIcon(QMessageBox.Icon.Warning)
+        dlg.setStandardButtons(QMessageBox.StandardButton.Ok |
+                               QMessageBox.StandardButton.Cancel)
+        dlg.setFixedWidth(400)
+        if dlg.exec() == QMessageBox.StandardButton.Ok:
             self.wrk('wb_frm')
 
 
     @dec_gui_busy
     def on_click_btn_led(self, _):
         self.wrk('wb_led')
+
+
+    @dec_gui_busy
+    def on_click_btn_log(self, _):
+        self.wrk('wb_log')
 
 
     @dec_gui_busy
@@ -448,6 +472,29 @@ class Bix(QMainWindow, Ui_MainWindow):
         y = bp.y() + 25
         p = QPoint(x, y)
         self.context_menu_scf.exec(p)
+
+
+
+    @dec_gui_busy
+    def on_click_btn_download(self, _):
+        self.lbl_download.setText('')
+        bp = self.btn_download.mapToGlobal(QtCore.QPoint(0, 0))
+        x = bp.x() + 25
+        y = bp.y() + 25
+        p = QPoint(x, y)
+        self.context_menu_dl.exec(p)
+
+
+
+    @dec_gui_busy
+    def on_click_btn_download_normal(self, _):
+        self.wrk('wb_download_normal')
+
+
+    @dec_gui_busy
+    def on_click_btn_download_fast(self, _):
+        self.wrk('wb_download_fast')
+
 
 
     @dec_gui_busy
@@ -533,31 +580,90 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     def on_click_btn_plot(self, _):
-        p = self.dialog_import_file_csv_to_plot()
-        # p = '/home/kaz/Downloads/dl_bil_v2/F0-5E-CD-25-92-F1/2508700_BIL_20250923_184053_TDO.csv'
-        if not p:
+
+        # point to CSV file or hard-code it
+        # p = self.dialog_import_file_csv_to_plot()
+        path_csv = '/home/kaz/Downloads/dl_bil_v5/2508701_BIL_20250930_161818_TDO.csv'
+        if not path_csv:
             return
-        self.lay.removeWidget(self.gr)
-        self.gr = MyPlotWidget(
+        bn = os.path.basename(path_csv)
+
+
+        # remove OLD graph
+        self.lay.removeWidget(self.pw)
+        self.pw = MyPlotWidget(
             # viewBox=CustomViewBox(),
             axisItems={'bottom': pg.DateAxisItem()})
-        self.lay.addWidget(self.gr)
-        df = pd.read_csv(p)
+        self.lay.addWidget(self.pw)
+        self.pw.setBackground("white")
+
+
+
+        # infer logger type from filename
+        glt = 'DOX'
+        if 'TDO' in bn:
+            glt = 'TDO'
+        elif 'CTD' in bn:
+            glt = 'CTD'
+
+
+        # load CSV data, transform X-axis to seconds
+        df = pd.read_csv(path_csv)
         x = df['ISO 8601 Time'].values
-        y = df['raw ADC Pressure'].values
         xf = []
         for i in x:
             dt = datetime.strptime(i, '%Y-%m-%dT%H:%M:%S.000Z').timestamp()
             xf.append(dt)
-        # pen None removes the line
-        pen = pg.mkPen(color=(255, 0, 0))
-        self.gr.plot(xf, y, pen=None, symbol='o', symbolSize=5, name="My Data")
-        self.gr.setBackground("white")
-        bn = os.path.basename(p)
-        self.lbl_plot.setText(bn)
-        self.gr.setVisible(True)
 
-        view_box = self.gr.plotItem.vb
+
+        # set pen to None to remove the line between plotted data points
+        pen = pg.mkPen(color=(255, 0, 0))
+
+
+        # ----------------
+        # plot data points
+        # ----------------
+        p1 = self.pw.plotItem
+        p2 = None
+        y1 = []
+        y2 = []
+        if glt == 'TDO':
+            m1 = 'Temperature (C)'
+            y1 = df[m1].values
+            m2 = 'Pressure (dbar)'
+            y2 = df[m2].values
+            p1.setLabels(left='axis 1')
+            p2 = pg.ViewBox()
+            p1.showAxis('right')
+            p1.scene().addItem(p2)
+            p1.getAxis('right').linkToView(p2)
+            p2.setXLink(p1)
+            p1.getAxis('left').setLabel(m1, color='red')
+            p1.getAxis('left').setTextPen(color='red')
+            p1.getAxis('right').setLabel(m2, color='blue')
+            p1.getAxis('right').setTextPen(color='blue')
+
+
+
+        def updateViews():
+            p2.setGeometry(p1.vb.sceneBoundingRect())
+            p2.linkedViewChanged(p1.vb, p2.XAxis)
+
+        updateViews()
+        p1.vb.sigResized.connect(updateViews)
+        p1.plot(xf, y1, symbol='x', pen=None, size=3, symbolPen='red')
+        p2.addItem(pg.PlotDataItem(xf, y2, symbol='o', pen=None, size=3, symbolPen='blue'))
+
+
+
+        # set title of the plot
+        bn = os.path.basename(path_csv)
+        self.lbl_plot.setText(bn)
+
+
+        # allow mouse events in the plot
+        self.pw.setVisible(True)
+        view_box = self.pw.plotItem.vb
         view_box.setMouseEnabled(x=True, y=True)
 
 
@@ -578,17 +684,35 @@ class Bix(QMainWindow, Ui_MainWindow):
         except FileNotFoundError:
             self.progressBar.setValue(0)
 
+
         # animated busy
         s = self.lbl_busy.text().split(' ')[0]
         if global_get('busy') and 'done' not in s:
             v = (int(time.time()) % 3) + 1
             self.lbl_busy.setText(s + ' ' + ('.' * v))
 
+
         # always on correct tab
         if not is_connected():
             if self.pages.currentIndex() != 0:
                 print('moving to proper logger GUI page')
                 self.pages.setCurrentIndex(0)
+
+        # show points clicked in plot
+        _cx = self.pw.clicked_x
+        _cy1 = self.pw.clicked_y1
+        _cy2 = self.pw.clicked_y2
+        s = f'{_cx}, {_cy1}'
+        self.lbl_p1.setText(s)
+        s = f'{_cx}, {_cy2}'
+        self.lbl_p2.setText(s)
+
+        p1 = self.pw.plotItem
+        p2 = pg.ViewBox()
+        p2.setXLink(p1)
+        if _cx:
+            p1.plot([10], [25], symbol='x', pen=None, size=10, symbolPen='green')
+        # p2.addItem(pg.PlotDataItem(xf, y2, symbol='o', pen=None, size=3, symbolPen='blue'))
 
 
 
@@ -639,6 +763,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_sts.clicked.connect(self.on_click_btn_sts)
         self.btn_frm.clicked.connect(self.on_click_btn_frm)
         self.btn_led.clicked.connect(self.on_click_btn_led)
+        self.btn_log.clicked.connect(self.on_click_btn_log)
         self.btn_gcc.clicked.connect(self.on_click_btn_gcc)
         self.btn_gcf.clicked.connect(self.on_click_btn_gcf)
         self.btn_scc.clicked.connect(self.on_click_btn_scc)
@@ -662,13 +787,19 @@ class Bix(QMainWindow, Ui_MainWindow):
         _scf_mid.triggered.connect(self.on_click_btn_scf_mid)
         _scf_fast.triggered.connect(self.on_click_btn_scf_fast)
         _scf_fixed_5_min.triggered.connect(self.on_click_btn_scf_fixed_5_min)
+        # context download menu
+        self.context_menu_dl = QMenu(self)
+        _dl_slow = self.context_menu_dl.addAction("download normal")
+        _dl_fast = self.context_menu_dl.addAction("download fast")
+        _dl_slow.triggered.connect(self.on_click_btn_download_normal)
+        _dl_fast.triggered.connect(self.on_click_btn_download_fast)
 
 
         # plots of pressure, temperature, CSV files
-        self.gr = MyPlotWidget(
+        self.pw = MyPlotWidget(
             # viewBox=CustomViewBox(),
             axisItems={'bottom': pg.DateAxisItem()})
-        self.gr.setVisible(False)
+        self.pw.setVisible(False)
 
 
         # debug: uncomment when needed

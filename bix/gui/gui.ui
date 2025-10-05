@@ -13,12 +13,16 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>res/icon_li.png</normaloff>res/icon_li.png</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
      <widget class="QTabWidget" name="tabs">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="laytab">
        <attribute name="title">
@@ -40,7 +44,7 @@
         <item>
          <widget class="QStackedWidget" name="pages">
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="page_1">
            <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -51,7 +55,23 @@
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,1,1">
                   <item>
-                   <layout class="QVBoxLayout" name="verticalLayout_3">
+                   <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,1,0,1">
+                    <property name="sizeConstraint">
+                     <enum>QLayout::SetDefaultConstraint</enum>
+                    </property>
+                    <item>
+                     <spacer name="verticalSpacer_5">
+                      <property name="orientation">
+                       <enum>Qt::Vertical</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>20</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
                     <item>
                      <widget class="QPushButton" name="btn_import_macs">
                       <property name="minimumSize">
@@ -64,6 +84,35 @@
                        <string>Import Logger Alias File</string>
                       </property>
                      </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="lbl_empty">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="verticalSpacer_3">
+                      <property name="orientation">
+                       <enum>Qt::Vertical</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>20</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                     </spacer>
                     </item>
                    </layout>
                   </item>
@@ -94,7 +143,7 @@
                   <item>
                    <layout class="QVBoxLayout" name="verticalLayout_20" stretch="0,1,1,0">
                     <item>
-                     <spacer name="verticalSpacer">
+                     <spacer name="verticalSpacer_4">
                       <property name="orientation">
                        <enum>Qt::Vertical</enum>
                       </property>
@@ -340,7 +389,7 @@
                     <item>
                      <widget class="QLabel" name="label_5">
                       <property name="text">
-                       <string>Battery mV</string>
+                       <string>Battery</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -362,7 +411,7 @@
                  </layout>
                 </item>
                 <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_15" stretch="1,1,1,1,1">
+                 <layout class="QHBoxLayout" name="horizontalLayout_15" stretch="1,1,1,1,1,1">
                   <item>
                    <widget class="QPushButton" name="btn_rws">
                     <property name="minimumSize">
@@ -422,6 +471,19 @@
                     </property>
                     <property name="text">
                      <string>LED</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_log">
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>100</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>LOG</string>
                     </property>
                    </widget>
                   </item>
@@ -800,6 +862,45 @@ BEH</string>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_2">
                  <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_12">
+                   <item>
+                    <spacer name="horizontalSpacer_2">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_7">
+                     <property name="maximumSize">
+                      <size>
+                       <width>220</width>
+                       <height>80</height>
+                      </size>
+                     </property>
+                     <property name="frameShape">
+                      <enum>QFrame::Box</enum>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="pixmap">
+                      <pixmap>res/logo_li_big.jpg</pixmap>
+                     </property>
+                     <property name="scaledContents">
+                      <bool>true</bool>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
                   <widget class="QLabel" name="lbl_table">
                    <property name="text">
                     <string>Table &lt;name&gt; contents</string>
@@ -859,8 +960,11 @@ BEH</string>
            <layout class="QHBoxLayout" name="horizontalLayout_9">
             <item>
              <widget class="QLabel" name="lbl_p1">
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
               <property name="text">
-               <string/>
+               <string>&lt;&gt;</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -869,8 +973,11 @@ BEH</string>
             </item>
             <item>
              <widget class="QLabel" name="lbl_p2">
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
               <property name="text">
-               <string/>
+               <string>&lt;&gt;</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
