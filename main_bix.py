@@ -298,6 +298,7 @@ class Bix(QMainWindow, Ui_MainWindow):
             # prevent smashing GUI buttons
             if global_get('busy'):
                 return
+            self.lbl_connecting.setStyleSheet('color: black')
             self.lbl_busy.setText('busy')
             # calls GUI button function such as _on_click_btn_leds()
             fxn(self, *args, **kwargs)
