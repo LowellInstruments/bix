@@ -1,6 +1,6 @@
 import os
 from PyQt6.QtCore import QRunnable, pyqtSlot
-from bix.utils import WorkerSignals, FOL_BIL, global_set
+from bix.utils import WorkerSignals, PATH_BIL_FOLDER, global_set
 from ble.ble import *
 from lix.ascii85 import num_to_ascii85
 from lix.lix import parse_lid_v2_data_file, decode_accelerometer_measurement
@@ -57,7 +57,7 @@ class WorkerBle(QRunnable):
                 self._ser('dwl')
                 return
             print(f'saving {name}')
-            dst_filename = f'{FOL_BIL}/{name}'
+            dst_filename = f'{PATH_BIL_FOLDER}/{name}'
             with open(dst_filename, 'wb') as f:
                 f.write(data)
             el = int(time.time()) - el
@@ -112,7 +112,7 @@ class WorkerBle(QRunnable):
                 self._ser('dwf')
                 return
             print(f'saving fast {name}')
-            dst_filename = f'{FOL_BIL}/{name}'
+            dst_filename = f'{PATH_BIL_FOLDER}/{name}'
             with open(dst_filename, 'wb') as f:
                 f.write(data)
             el = int(time.time()) - el

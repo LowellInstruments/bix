@@ -16,10 +16,10 @@ from PyQt6.QtWidgets import (
 )
 from bix.utils import (
     mac_test,
-    FOL_BIL,
+    PATH_BIL_FOLDER,
     create_profile_dictionary,
     create_calibration_dictionary,
-    DEF_ALIASES_FILE_PATH, global_get,
+    PATH_BIL_DEF_ALIASES_FILE, global_get,
 )
 from bix.gui.gui import Ui_MainWindow
 import setproctitle
@@ -45,6 +45,13 @@ from lix.pressure import LixFileConverterP
 from lix.temperature import LixFileConverterT
 
 
+ls_x = []
+ls_y = []
+closest_x = 0
+
+
+def closest(lst, K):
+    return lst[min(range(len(lst)), key=lambda i: abs(lst[i] - K))]
 
 
 
@@ -61,11 +68,19 @@ class MyPlotWidget(pg.PlotWidget):
     def mouse_clicked(self, mouse_click_event):
         print('clicked plot 0x{:x}, event: {}'.format(id(self), mouse_click_event))
         ev = mouse_click_event
-        print('x = {}'.format(self.mapToView(ev.pos()).x()))
-        ts = self.mapToView(ev.pos()).x()
-        print(f't = {datetime.fromtimestamp(ts)}')
+        x = ev.pos().x()
+        y = ev.pos().y()
+        print('\n')
+        global closest_x
+        closest_x = int(closest(ls_x, x))
+        closest_y = int(closest(ls_y, y))
+        print('closest_x', int(closest_x))
+        print('closest_y', int(closest_y))
+        closest_point = QPoint(closest_x, closest_y)
+        map_x = self.mapToView(closest_point).x()
+        print('map_x', int(closest_x))
         print('y = {}'.format(self.mapToView(ev.pos()).y()))
-        self.clicked_x = self.mapToView(ev.pos()).x()
+        self.clicked_x = map_x
         self.clicked_i = (self.clicked_i + 1) % 2
         if self.clicked_i == 0:
             self.clicked_y1 = self.mapToView(ev.pos()).y()
@@ -109,7 +124,7 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     def _load_toml_file(self, s):
-        p, _ = QFileDialog.getOpenFileName(self, s, FOL_BIL, 'TOML Files (*.toml)')
+        p, _ = QFileDialog.getOpenFileName(self, s, PATH_BIL_FOLDER, 'TOML Files (*.toml)')
         bn = os.path.basename(p)
         try:
             print(f'trying to load TOML file {bn}')
@@ -141,7 +156,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         p, _ = QFileDialog.getOpenFileName(
             self,
             'Choose CSV file',
-            FOL_BIL,
+            PATH_BIL_FOLDER,
             'CSV Files (*.csv)'
         )
         return p
@@ -583,7 +598,7 @@ class Bix(QMainWindow, Ui_MainWindow):
 
         # point to CSV file or hard-code it
         # p = self.dialog_import_file_csv_to_plot()
-        path_csv = '/home/kaz/Downloads/dl_bil_v5/2508701_BIL_20250930_161818_TDO.csv'
+        path_csv = 'tests\\2508700_BIL_20250923_184053_TDO.csv'
         if not path_csv:
             return
         bn = os.path.basename(path_csv)
@@ -654,6 +669,11 @@ class Bix(QMainWindow, Ui_MainWindow):
         p1.plot(xf, y1, symbol='x', pen=None, size=3, symbolPen='red')
         p2.addItem(pg.PlotDataItem(xf, y2, symbol='o', pen=None, size=3, symbolPen='blue'))
 
+        global ls_x
+        global ls_y
+        ls_x = xf
+        ls_y = y1
+
 
 
         # set title of the plot
@@ -711,7 +731,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         p2 = pg.ViewBox()
         p2.setXLink(p1)
         if _cx:
-            p1.plot([10], [25], symbol='x', pen=None, size=10, symbolPen='green')
+            p1.plot([closest_x], [25], symbol='x', pen=None, size=10, symbolPen='green')
         # p2.addItem(pg.PlotDataItem(xf, y2, symbol='o', pen=None, size=3, symbolPen='blue'))
 
 
@@ -745,9 +765,9 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
         # auto-import MAC aliases file
-        if os.path.exists(DEF_ALIASES_FILE_PATH):
-            print(f'auto-importing alias file {DEF_ALIASES_FILE_PATH}')
-            d = toml.load(DEF_ALIASES_FILE_PATH)
+        if os.path.exists(PATH_BIL_DEF_ALIASES_FILE):
+            print(f'auto-importing alias file {PATH_BIL_DEF_ALIASES_FILE}')
+            d = toml.load(PATH_BIL_DEF_ALIASES_FILE)
             d = d['aliases']
             fill_logger_aliases_table(self, d)
 
@@ -835,8 +855,14 @@ class Bix(QMainWindow, Ui_MainWindow):
                 zoom=5
             )
         )
-        fig.write_html('/tmp/a.html')
-        url = QUrl.fromLocalFile('/tmp/a.html')
+
+
+        path_html = '/tmp/temp_file_map.html'
+        if platform.system() == 'Windows':
+            path_html = 'temp_file_map.html'
+
+        fig.write_html(path_html)
+        url = QUrl.fromLocalFile(path_html)
         self.maps_webview.load(url)
 
 

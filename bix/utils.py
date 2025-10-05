@@ -6,8 +6,8 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 def mac_test():
     # mt = "D0:2E:AB:D9:29:48"  # TDO bread
-    mt = "F0:5E:CD:25:92:F1"  # TDO 2508700 *
-    # mt = "F0:5E:CD:25:A1:16"    # TDO 2508701
+    # mt = "F0:5E:CD:25:92:F1"  # TDO 2508700 *
+    mt = "F0:5E:CD:25:A1:16"    # TDO 2508701
     # mt = "F0:5E:CD:25:92:9D"    # TDO 2508702
     # mt = "F0:5E:CD:25:92:95"    # TDO 2508703 *
     # mt = "F0:5E:CD:25:95:D4"    # CTD
@@ -22,12 +22,10 @@ g_d = {
 
 
 
-PATH_ALIAS_FILE = pathlib.Path.home() / 'Downloads' / 'bil_v2_logger_aliases.toml'
+PATH_BIL_FOLDER = str(pathlib.Path.home() / 'Downloads/dl_bil_v5')
+PATH_BIL_DEF_ALIASES_FILE = f'{PATH_BIL_FOLDER}/bil_v5_logger_aliases.toml'
+os.makedirs(PATH_BIL_FOLDER, exist_ok=True)
 RVN_SCC_4 = "00004"
-FOL_BIL = str(pathlib.Path.home() / 'Downloads/dl_bil_v5')
-DEF_ALIASES_FILE_PATH = f'{FOL_BIL}/bil_v5_logger_aliases.toml'
-os.makedirs(FOL_BIL, exist_ok=True)
-PATH_RELATIVE_ICON_FOLDER = 'bix/gui/res'
 
 
 
