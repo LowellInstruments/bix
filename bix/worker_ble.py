@@ -61,6 +61,7 @@ class WorkerBle(QRunnable):
             with open(dst_filename, 'wb') as f:
                 f.write(data)
             el = int(time.time()) - el
+            el = el if el else 1
             print('download speed = {} KB/s'.format((size / 1000) / el))
 
             time.sleep(1)
@@ -116,6 +117,7 @@ class WorkerBle(QRunnable):
             with open(dst_filename, 'wb') as f:
                 f.write(data)
             el = int(time.time()) - el
+            el = el if el else 1
             print('download fast speed = {} KB/s'.format((size / 1000) / el))
 
             time.sleep(1)
@@ -189,8 +191,6 @@ class WorkerBle(QRunnable):
 
 
     async def wb_gec(self):
-        if await self._bad_we_are_running('GEC'):
-            return
         rv, v = await cmd_gec()
         if rv:
             self._ser('gec')

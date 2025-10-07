@@ -312,11 +312,11 @@ class Bix(QMainWindow, Ui_MainWindow):
         # these values match DDH
         v = d['bat']
         if glt == 'TDO':
-            v *= .5454
+            v /= .5454
         if glt == 'CTD':
-            v *= .5454
+            v /= .5454
         if glt.startswith('DO'):
-            v *= .4545
+            v /= .4545
 
         v = int(v)
         s = f'{v} mV'

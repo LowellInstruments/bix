@@ -9,6 +9,7 @@ apps/__pycache__/
 *.py[cod]
 *$py.class
 bix/gui/__pycache__/
+*.csv
 
 
 # Distribution / packaging

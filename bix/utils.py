@@ -10,8 +10,9 @@ def mac_test():
     # mt = "F0:5E:CD:25:A1:16"    # TDO 2508701
     # mt = "F0:5E:CD:25:92:9D"    # TDO 2508702
     # mt = "F0:5E:CD:25:92:95"    # TDO 2508703 *
-    mt = "F0:5E:CD:25:95:D4"    # CTD
+    # mt = "F0:5E:CD:25:95:D4"    # CTD
     # mt = "F0:5E:CD:25:92:EA" # CTD_JED
+    mt = "F0:5E:CD:25:A2:12"    # 2508705
     return mt
 
 
