@@ -211,11 +211,11 @@ class WorkerBle(QRunnable):
         i = int(v)
         s = ''
         if i == 0:
-            s = f'MUX {i} = V1 V2'
+            s = f'MUX {i} = all open'
         elif i == 1:
             s = f'MUX {i} = all shorted'
         elif i == 2:
-            s = f'MUX {i} = all open'
+            s = f'MUX {i} = Cout'
         self.signals.result.emit(s)
 
 
