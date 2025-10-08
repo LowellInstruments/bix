@@ -287,15 +287,18 @@ class Bix(QMainWindow, Ui_MainWindow):
             v = d['gsc']
             print(f'GSC {v}')
             v = v.decode()
-            c0 = v[2:4] + v[0:2]
-            c1 = v[6:8] + v[4:6]
-            c2 = v[10:12] + v[8:10]
-            c3 = v[14:16] + v[12:14]
-            c0 = int(c0, 16)
-            c1 = int(c1, 16)
-            c2 = int(c2, 16)
-            c3 = int(c3, 16)
-            s = f'Conductivity\nV12 {c0}\nV21 {c1}\nC21 {c2}\nC12 {c3}\n'
+            vc0 = v[2:4] + v[0:2]
+            vc1 = v[6:8] + v[4:6]
+            print('a', vc0)
+            print('b', vc1)
+            # vc2 = v[10:12] + v[8:10]
+            # vc3 = v[14:16] + v[12:14]
+            vc0 = int(vc0, 16)
+            vc1 = int(vc1, 16)
+            # vc2 = int(vc2, 16)
+            # vc3 = int(vc3, 16)
+            # s = f'Conductivity\nV12 {c0}\nV21 {c1}\nC21 {c2}\nC12 {c3}\n'
+            s = f'Conductivity\nC21 {vc0}\nC12 {vc1}\n'
             self.lbl_gsc.setText(s)
 
 

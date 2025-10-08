@@ -316,26 +316,28 @@ class WorkerBle(QRunnable):
                 return
             d['gsp'] = v
 
-            rv, v = await cmd_gsa()
-            if rv:
-                self._ser('gsa')
-                return
-            vax = decode_accelerometer_measurement(v[-6:-4])
-            vay = decode_accelerometer_measurement(v[-4:-2])
-            vaz = decode_accelerometer_measurement(v[-2:])
-            d['gax'] = vax
-            d['gay'] = vay
-            d['gaz'] = vaz
+            if g_glt == 'TDO':
+                rv, v = await cmd_gsa()
+                if rv:
+                    self._ser('gsa')
+                    return
+                vax = decode_accelerometer_measurement(v[-6:-4])
+                vay = decode_accelerometer_measurement(v[-4:-2])
+                vaz = decode_accelerometer_measurement(v[-2:])
+                d['gax'] = vax
+                d['gay'] = vay
+                d['gaz'] = vaz
 
 
 
         if g_glt == 'CTD':
-            pass
-            # rv, v = await cmd_gsc()
-            # if rv:
-            #     self._ser('gsc')
-            #     return
-            # d['gsc'] = v
+            rv, v = await cmd_gsc()
+            print('** gsc', v)
+            if rv:
+                self._ser('gsc')
+                return
+            d['gsc'] = v
+
 
         if g_glt.startswith('DO'):
             rv, v = await cmd_gdx()
