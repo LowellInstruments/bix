@@ -16,13 +16,24 @@ def fill_calibration_table(app, d):
         _it = QTableWidgetItem(k)
         _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         app.table.setItem(i, 0, _it)
-        f_str = str(ascii85_to_num(v))
-        _it = QTableWidgetItem(f_str)
-        _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        app.table.setItem(i, 1, _it)
-        _it = QTableWidgetItem(v)
-        _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        app.table.setItem(i, 2, _it)
+
+        # things tags HAVE ascii85 value
+        if k not in ('PRC', 'PRD', 'DCO', 'NCO', 'DHU', 'DCD'):
+            f_str = str(ascii85_to_num(v))
+            _it = QTableWidgetItem(f_str)
+            _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            app.table.setItem(i, 1, _it)
+            _it = QTableWidgetItem(v)
+            _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            app.table.setItem(i, 2, _it)
+        else:
+            # these tags do NOT work in ascii85
+            _it = QTableWidgetItem(v)
+            _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            app.table.setItem(i, 1, _it)
+            _it = QTableWidgetItem('')
+            _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            app.table.setItem(i, 2, _it)
 
     h = app.table.horizontalHeader()
     h.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)

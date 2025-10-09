@@ -212,6 +212,14 @@ class Bix(QMainWindow, Ui_MainWindow):
     def slot_signal_connected(self):
         self.pages.setCurrentIndex(1)
         self.lbl_connecting.setText('')
+        self.lbl_sts.setText('')
+        self.lbl_gst.setText('')
+        self.lbl_gsp.setText('')
+        self.lbl_gsa.setText('')
+        self.lbl_gsc.setText('')
+        self.lbl_gdo.setText('')
+        self.lbl_download.setText('')
+        self.progressBar.setValue(0)
 
 
     def slot_signal_disconnected(self):
@@ -239,14 +247,14 @@ class Bix(QMainWindow, Ui_MainWindow):
         glt = self.lbl_glt.text()
         self.lbl_gst.setVisible(False)
         self.lbl_gsp.setVisible(False)
-        self.lbl_acc.setVisible(False)
+        self.lbl_gsa.setVisible(False)
         self.lbl_gsc.setVisible(False)
         self.lbl_gdo.setVisible(False)
 
         if glt in ('TDO', 'CTD'):
             self.lbl_gst.setVisible(True)
             self.lbl_gsp.setVisible(True)
-            self.lbl_acc.setVisible(True)
+            self.lbl_gsa.setVisible(True)
 
             # do conversion with default values
             v = str(d['gst'])
@@ -277,7 +285,7 @@ class Bix(QMainWindow, Ui_MainWindow):
             vay = str(d['gay'])
             vaz = str(d['gaz'])
             s = f'Accelerometer\nX = {vax}\nY = {vay}\nZ = {vaz}'
-            self.lbl_acc.setText(s)
+            self.lbl_gsa.setText(s)
             print(f'ACC {vax}, {vay}, {vaz}')
 
 
@@ -366,33 +374,31 @@ class Bix(QMainWindow, Ui_MainWindow):
 
     @dec_gui_busy
     def on_click_btn_connect(self, _):
-        mac = mac_test()
+        self.mac = mac_test()
         h_s = 'hard-coded'
         r = self.tbl_known_macs.currentRow()
         if r and r != -1:
-            mac = self.tbl_known_macs.item(r, 0).text()
+            self.mac = self.tbl_known_macs.item(r, 0).text()
             h_s = ''
 
         # style
         self.lbl_connecting.setStyleSheet('color: rgb(87, 170, 255);')
 
-
-
         # be sure we are disconnected
-        if ble_linux_is_mac_already_connected(mac):
-            s = f'pre-leave {mac}'
+        if ble_linux_is_mac_already_connected(self.mac):
+            s = f'pre-leave {self.mac}'
             print(s)
             self.lbl_connecting.setText(s)
             QApplication.processEvents()
-            ble_linux_disconnect_by_mac(mac)
+            ble_linux_disconnect_by_mac(self.mac)
 
 
-        self.lbl_connecting.setText(f'connecting {mac} {h_s}')
+        self.lbl_connecting.setText(f'connecting {self.mac} {h_s}')
         self.wrk([
             'wb_connect',
             'wb_sensors',
             'wb_gcc'],
-            {'mac': mac}
+            {'mac': self.mac}
         )
 
 
@@ -678,11 +684,9 @@ class Bix(QMainWindow, Ui_MainWindow):
         ls_y = y1
 
 
-
         # set title of the plot
         bn = os.path.basename(path_csv)
         self.lbl_plot.setText(bn)
-
 
         # allow mouse events in the plot
         self.pw.setVisible(True)
@@ -716,7 +720,7 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
         # always on correct tab
-        if not is_connected():
+        if self.mac and not ble_linux_is_mac_already_connected(self.mac):
             if self.pages.currentIndex() != 0:
                 print('moving to proper logger GUI page')
                 self.pages.setCurrentIndex(0)
@@ -764,6 +768,8 @@ class Bix(QMainWindow, Ui_MainWindow):
         settings.setAttribute(
             QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
         self.lay_maps.addWidget(self.maps_webview)
+        # used to track connection state
+        self.mac = None
 
 
 

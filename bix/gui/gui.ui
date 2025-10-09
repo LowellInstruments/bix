@@ -22,7 +22,7 @@
     <item>
      <widget class="QTabWidget" name="tabs">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="laytab">
        <attribute name="title">
@@ -536,7 +536,7 @@ sensors</string>
                   <item>
                    <layout class="QVBoxLayout" name="verticalLayout_13">
                     <item>
-                     <widget class="QLabel" name="lbl_acc">
+                     <widget class="QLabel" name="lbl_gsa">
                       <property name="text">
                        <string>GSA</string>
                       </property>

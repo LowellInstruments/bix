@@ -266,10 +266,10 @@ class Ui_MainWindow(object):
         self.horizontalLayout_16.addLayout(self.verticalLayout_12)
         self.verticalLayout_13 = QtWidgets.QVBoxLayout()
         self.verticalLayout_13.setObjectName("verticalLayout_13")
-        self.lbl_acc = QtWidgets.QLabel(parent=self.page_2)
-        self.lbl_acc.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.lbl_acc.setObjectName("lbl_acc")
-        self.verticalLayout_13.addWidget(self.lbl_acc)
+        self.lbl_gsa = QtWidgets.QLabel(parent=self.page_2)
+        self.lbl_gsa.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.lbl_gsa.setObjectName("lbl_gsa")
+        self.verticalLayout_13.addWidget(self.lbl_gsa)
         self.horizontalLayout_16.addLayout(self.verticalLayout_13)
         self.verticalLayout_14 = QtWidgets.QVBoxLayout()
         self.verticalLayout_14.setObjectName("verticalLayout_14")
@@ -495,7 +495,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
-        self.tabs.setCurrentIndex(1)
+        self.tabs.setCurrentIndex(0)
         self.pages.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -530,7 +530,7 @@ class Ui_MainWindow(object):
 "sensors"))
         self.lbl_gst.setText(_translate("MainWindow", "GST"))
         self.lbl_gsp.setText(_translate("MainWindow", "GSP"))
-        self.lbl_acc.setText(_translate("MainWindow", "GSA"))
+        self.lbl_gsa.setText(_translate("MainWindow", "GSA"))
         self.lbl_gsc.setText(_translate("MainWindow", "GSC"))
         self.lbl_gdo.setText(_translate("MainWindow", "GDO"))
         self.btn_gcc.setText(_translate("MainWindow", "get\n"
