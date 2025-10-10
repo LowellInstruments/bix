@@ -292,6 +292,9 @@ class WorkerBle(QRunnable):
             self._ser('not connected while sensors')
             return
 
+        if await self._bad_we_are_running('sensors'):
+            return
+
         rv, v = await cmd_bat()
         if rv:
             self._ser('bat while sensors')
