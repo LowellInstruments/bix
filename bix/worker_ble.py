@@ -230,6 +230,16 @@ class WorkerBle(QRunnable):
         self.signals.result.emit(f'GCI = {i} ms')
 
 
+    async def wb_inf(self):
+        rv, v = await cmd_inf()
+        if rv:
+            self._ser('inf')
+            return
+        print('INF rv, v', rv, v)
+        self.signals.done.emit()
+        self.signals.inf.emit(v.decode())
+
+
     async def wb_osc(self):
         rv, v = await cmd_osc()
         if rv:
@@ -442,41 +452,6 @@ class WorkerBle(QRunnable):
             return
         self.signals.connected.emit()
 
-        # we are connected, get logger info
-        self.signals.gui_status.emit('querying')
-        d = {}
-        rv, v = await cmd_sts()
-        if rv:
-            self._ser('sts')
-            return
-        d['sts'] = v
-
-        rv, v = await cmd_glt()
-        if rv:
-            self._ser('glt')
-            return
-        d['glt'] = v
-
-        rv, v = await cmd_gfv()
-        if rv:
-            self._ser('gfv')
-            return
-        d['gfv'] = v
-
-        rv, v = await cmd_mac()
-        if rv:
-            self._ser('mac')
-            return
-        d['mac'] = v
-
-        rv, v = await cmd_rli()
-        if rv:
-            self._ser('rli')
-            return
-        d['sn'] = v['SN']
-
-        self.signals.info.emit(d)
-
 
     @pyqtSlot()
     def run(self):
@@ -511,7 +486,8 @@ class WorkerBle(QRunnable):
             'wb_gec': self.wb_gec,
             'wb_mux': self.wb_mux,
             'wb_osc': self.wb_osc,
-            'wb_gci': self.wb_gci
+            'wb_gci': self.wb_gci,
+            'wb_inf': self.wb_inf,
         }
         self.ls_fn = []
         if type(ls_gui_cmd) is str:

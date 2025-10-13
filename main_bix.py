@@ -233,13 +233,19 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.lbl_connecting.setText(f'can\'t connect {mac}')
 
 
-    def slot_signal_info(self, d: dict):
-        self.lbl_sn.setText(d['sn'])
-        self.lbl_mac.setText(d['mac'])
-        self.lbl_gfv.setText(d['gfv'])
-        glt = d['glt']
+    def slot_signal_info(self, s: str):
+        # TDO,F0:5E:CD:25:97:02,2508706,0,2000/01/01 00:05:32,2,1664,2025/10/10 18:14:01,0,0
+        ls = s.split(',')
+        glt = ls[0]
+        mac = ls[1]
+        sn = ls[2]
+        gfv = ls[3]
+        sts = ls[4]
+        self.lbl_sn.setText(sn)
+        self.lbl_mac.setText(mac)
         self.lbl_glt.setText(glt)
-        self.lbl_sts.setText(d['sts'])
+        self.lbl_gfv.setText(gfv)
+        self.lbl_sts.setText(sts)
         self.table.setVisible(glt in ('TDO', 'CTD'))
 
 
@@ -357,7 +363,6 @@ class Bix(QMainWindow, Ui_MainWindow):
         w = WorkerBle(ls_operations, d_args)
         w.signals.connected.connect(self.slot_signal_connected)
         w.signals.cannot_connect.connect(self.slot_signal_cannot_connect)
-        w.signals.info.connect(self.slot_signal_info)
         w.signals.sensors.connect(self.slot_signal_sensors)
         w.signals.done.connect(self.slot_signal_done)
         w.signals.result.connect(self.slot_signal_result)
@@ -368,6 +373,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         w.signals.gcc.connect(self.slot_signal_gcc)
         w.signals.gcf.connect(self.slot_signal_gcf)
         w.signals.download.connect(self.slot_signal_download)
+        w.signals.inf.connect(self.slot_signal_info)
         # run() in Worker class, which signals results to our slot_signals_x()
         self.threadpool.start(w)
 
@@ -396,6 +402,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.lbl_connecting.setText(f'connecting {self.mac} {h_s}')
         self.wrk([
             'wb_connect',
+            'wb_inf',
             'wb_sensors',
             'wb_gcc'],
             {'mac': self.mac}
@@ -436,6 +443,11 @@ class Bix(QMainWindow, Ui_MainWindow):
     @dec_gui_busy
     def on_click_btn_gci(self, _):
         self.wrk('wb_gci')
+
+
+    @dec_gui_busy
+    def on_click_btn_inf(self, _):
+        self.wrk('wb_inf')
 
 
     @dec_gui_busy
@@ -805,6 +817,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_mux.clicked.connect(self.on_click_btn_mux)
         self.btn_osc.clicked.connect(self.on_click_btn_osc)
         self.btn_gci.clicked.connect(self.on_click_btn_gci)
+        self.btn_inf.clicked.connect(self.on_click_btn_inf)
         self.btn_plot.clicked.connect(self.on_click_btn_plot)
         # context SCF menu
         self.context_menu_scf = QMenu(self)
