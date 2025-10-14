@@ -131,7 +131,7 @@ class Bix(QMainWindow, Ui_MainWindow):
             return toml.load(p)
         except (Exception, ) as e:
             self.gui_show_error_message(
-                desc=f'error: opening TOML file {bn}',
+                desc=f'error, opening TOML file {bn}',
                 solution=f'fix {e}'
             )
 
@@ -529,7 +529,10 @@ class Bix(QMainWindow, Ui_MainWindow):
 
     @dec_gui_busy
     def on_click_btn_download_fast(self, _):
-        self.wrk('wb_download_fast')
+        self.wrk([
+            'wb_download_fast',
+            'wb_download_normal'
+        ])
 
 
 

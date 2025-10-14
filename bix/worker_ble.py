@@ -44,6 +44,13 @@ class WorkerBle(QRunnable):
 
         for i, name_size in enumerate(d.items()):
             name, size = name_size
+            dst_filename = f'{PATH_BIL_FOLDER}/{name}'
+
+            # prevent DWL if already exists
+            if os.path.exists(dst_filename):
+                print(f'DWL, file already exists, skip {dst_filename}')
+                continue
+
             rv = await cmd_dwg(name)
             if rv:
                 self._ser('dwg')
@@ -57,7 +64,6 @@ class WorkerBle(QRunnable):
                 self._ser('dwl')
                 return
             print(f'saving {name}')
-            dst_filename = f'{PATH_BIL_FOLDER}/{name}'
             with open(dst_filename, 'wb') as f:
                 f.write(data)
             el = int(time.time()) - el
@@ -119,8 +125,14 @@ class WorkerBle(QRunnable):
             el = int(time.time()) - el
             el = el if el else 1
             print('download fast speed = {} KB/s'.format((size / 1000) / el))
-
             time.sleep(1)
+
+            # is the DWF file OK
+            if len(data) != size:
+                print(f'DWF failed downloading {dst_filename}')
+                bn = os.path.basename(dst_filename)
+                self._ser(f'dwf {bn}')
+                return
 
             # convert
             if dst_filename.endswith('.lid') and 'dummy' not in dst_filename:
@@ -231,6 +243,11 @@ class WorkerBle(QRunnable):
 
 
     async def wb_inf(self):
+
+        if not is_connected():
+            self._ser('not connected, info')
+            return
+
         rv, v = await cmd_inf()
         if rv:
             self._ser('inf')
