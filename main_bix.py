@@ -516,12 +516,10 @@ class Bix(QMainWindow, Ui_MainWindow):
     @dec_gui_busy
     def on_click_btn_download(self, _):
         self.lbl_download.setText('')
-        bp = self.btn_download.mapToGlobal(QtCore.QPoint(0, 0))
-        x = bp.x() + 25
-        y = bp.y() + 25
-        p = QPoint(x, y)
-        self.context_menu_dl.exec(p)
-
+        self.wrk([
+            'wb_download_fast',
+            'wb_download_normal'
+        ])
 
 
     # @dec_gui_busy
@@ -529,12 +527,12 @@ class Bix(QMainWindow, Ui_MainWindow):
     #     self.wrk('wb_download_normal')
 
 
-    @dec_gui_busy
-    def on_click_btn_download_fast(self, _):
-        self.wrk([
-            'wb_download_fast',
-            'wb_download_normal'
-        ])
+    # @dec_gui_busy
+    # def on_click_btn_download_fast(self, _):
+    #     self.wrk([
+    #         'wb_download_fast',
+    #         'wb_download_normal'
+    #     ])
 
 
 

@@ -14,7 +14,8 @@ def mac_test():
     # mt = "F0:5E:CD:25:A2:12"    # 2508705
     # mt = "F0:5E:CD:25:95:D4"    # CTD JOAQUIM
     # mt = "F0:5E:CD:25:A4:0A"    # 2508704
-    mt = "F0:5E:CD:25:97:02"    # 2508706
+    # mt = "F0:5E:CD:25:97:02"    # 2508706
+    mt = "F0:5E:CD:25:95:D5"    # 2508708
     return mt
 
 
@@ -29,6 +30,7 @@ PATH_BIL_FOLDER = str(pathlib.Path.home() / 'Downloads/dl_bil_v5')
 PATH_BIL_DEF_ALIASES_FILE = f'{PATH_BIL_FOLDER}/bil_v5_logger_aliases.toml'
 os.makedirs(PATH_BIL_FOLDER, exist_ok=True)
 RVN_SCC_4 = "00004"
+print(f'env, PATH_BIL_DEF_ALIASES_FILE = {PATH_BIL_DEF_ALIASES_FILE}')
 
 
 
