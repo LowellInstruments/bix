@@ -219,6 +219,8 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.lbl_gsc.setText('')
         self.lbl_gdo.setText('')
         self.lbl_download.setText('')
+        if os.path.exists(DEV_SHM_DL_PROGRESS):
+            os.unlink(DEV_SHM_DL_PROGRESS)
         self.progressBar.setValue(0)
 
 
