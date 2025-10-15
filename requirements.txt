@@ -6,3 +6,5 @@ plotly
 toml
 ble@git+https://github.com/LowellInstruments/ble.git
 lix@git+https://github.com/LowellInstruments/lix.git
+pandas
+PyQt6-WebEngine
