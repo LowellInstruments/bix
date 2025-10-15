@@ -524,9 +524,9 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
 
-    @dec_gui_busy
-    def on_click_btn_download_normal(self, _):
-        self.wrk('wb_download_normal')
+    # @dec_gui_busy
+    # def on_click_btn_download_normal(self, _):
+    #     self.wrk('wb_download_normal')
 
 
     @dec_gui_busy
@@ -801,6 +801,7 @@ class Bix(QMainWindow, Ui_MainWindow):
 
         # buttons
         self.btn_connect.clicked.connect(self.on_click_btn_connect)
+        self.tbl_known_macs.doubleClicked.connect(self.on_click_btn_connect)
         self.btn_disconnect.clicked.connect(self.on_click_btn_disconnect)
         self.btn_sensors.clicked.connect(self.on_click_btn_sensors)
         self.btn_test.clicked.connect(self.on_click_btn_test)
@@ -824,7 +825,8 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.btn_gci.clicked.connect(self.on_click_btn_gci)
         self.btn_inf.clicked.connect(self.on_click_btn_inf)
         self.btn_plot.clicked.connect(self.on_click_btn_plot)
-        # context SCF menu
+
+        # SCF context menu
         self.context_menu_scf = QMenu(self)
         _scf_slow = self.context_menu_scf.addAction("profile slow")
         _scf_mid = self.context_menu_scf.addAction("profile mid")
@@ -834,12 +836,13 @@ class Bix(QMainWindow, Ui_MainWindow):
         _scf_mid.triggered.connect(self.on_click_btn_scf_mid)
         _scf_fast.triggered.connect(self.on_click_btn_scf_fast)
         _scf_fixed_5_min.triggered.connect(self.on_click_btn_scf_fixed_5_min)
-        # context download menu
-        self.context_menu_dl = QMenu(self)
-        _dl_slow = self.context_menu_dl.addAction("download normal")
-        _dl_fast = self.context_menu_dl.addAction("download fast")
-        _dl_slow.triggered.connect(self.on_click_btn_download_normal)
-        _dl_fast.triggered.connect(self.on_click_btn_download_fast)
+
+        # Download context menu
+        # self.context_menu_dl = QMenu(self)
+        # _dl_slow = self.context_menu_dl.addAction("download normal")
+        # _dl_fast = self.context_menu_dl.addAction("download fast")
+        # _dl_slow.triggered.connect(self.on_click_btn_download_normal)
+        # _dl_fast.triggered.connect(self.on_click_btn_download_fast)
 
 
         # plots of pressure, temperature, CSV files
