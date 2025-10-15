@@ -95,7 +95,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         if platform.system() != 'Linux':
             return
         v = ble_linux_get_bluez_version()
-        if v < '5.66':
+        if v <= '5.74':
             self.lbl_bluez_version.setStyleSheet('color: red')
             self.lbl_bluez_version.setText(f'caution: bluez v{v} < 5.66')
         else:
@@ -385,7 +385,8 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.mac = mac_test()
         h_s = 'hard-coded'
         r = self.tbl_known_macs.currentRow()
-        if r and r != -1:
+        print('*****r', r)
+        if r is not None and type(r) is int and r >= 0:
             self.mac = self.tbl_known_macs.item(r, 0).text()
             h_s = ''
 
