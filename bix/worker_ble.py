@@ -250,7 +250,12 @@ class WorkerBle(QRunnable):
 
         rv, v = await cmd_gin()
         if rv:
-            self._ser('gin')
+            # try to get it traditional way
+            # glt,mac,sn,gfv,sts,_,_,bat,_,_,_
+            # todo: fix this
+            s = 'my_glt,my_mac,my_sn,my_gfv,sts,_,_,0001,_,_,_'
+            self.signals.done.emit()
+            self.signals.cmd_get_info.emit(v.decode())
             return
         print('GIN rv, v', rv, v)
         self.signals.done.emit()
