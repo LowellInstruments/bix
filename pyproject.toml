@@ -16,4 +16,5 @@ dependencies = [
     "toml",
     "https://github.com/LowellInstruments/ble.git",
     "https://github.com/LowellInstruments/lix.git",
+    "rich"
 ]

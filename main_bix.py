@@ -1,13 +1,10 @@
 import os
-from pathlib import Path
-
 import pandas as pd
 from PyQt6 import QtGui, QtCore
 from PyQt6.QtCore import (
     QThreadPool,
     QTimer, QUrl, QPoint,
 )
-from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWebEngineCore import QWebEngineSettings
 from PyQt6.QtWidgets import (
     QApplication,
@@ -43,8 +40,11 @@ from PyQt6.QtWebEngineWidgets import QWebEngineView
 from lix.ascii85 import ascii85_to_num as a2n
 from lix.pressure import LixFileConverterP
 from lix.temperature import LixFileConverterT
+from rich.console import Console
 
 
+
+console = Console()
 ls_x = []
 ls_y = []
 closest_x = 0
@@ -181,7 +181,7 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
     def slot_signal_error(self, e):
-        print(f'slot {e}')
+        console.print(f'slot {e}', style="bold red")
         self.lbl_busy.setStyleSheet('color: red')
         self.lbl_busy.setText(f'{e}')
 
@@ -249,6 +249,21 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.lbl_gfv.setText(gfv)
         self.lbl_sts.setText(sts)
         self.table.setVisible(glt in ('TDO', 'CTD'))
+
+
+    def slot_signal_bat(self, v: float):
+        self.lbl_bat.setText(str(v))
+        glt = self.lbl_glt.text()
+        if glt == 'TDO':
+            v /= .5454
+        if glt == 'CTD':
+            v /= .5454
+        if glt.startswith('DO'):
+            v /= .4545
+        v = int(v)
+        s = f'{v} mV'
+        self.lbl_bat.setText(s)
+        print(f'BAT {s}')
 
 
     def slot_signal_sensors(self, d: dict):
@@ -366,6 +381,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         w.signals.connected.connect(self.slot_signal_connected)
         w.signals.cannot_connect.connect(self.slot_signal_cannot_connect)
         w.signals.sensors.connect(self.slot_signal_sensors)
+        w.signals.bat.connect(self.slot_signal_bat)
         w.signals.done.connect(self.slot_signal_done)
         w.signals.result.connect(self.slot_signal_result)
         w.signals.gui_status.connect(self.slot_signal_gui_status)
@@ -385,7 +401,6 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.mac = mac_test()
         h_s = 'hard-coded'
         r = self.tbl_known_macs.currentRow()
-        print('*****r', r)
         if r is not None and type(r) is int and r >= 0:
             self.mac = self.tbl_known_macs.item(r, 0).text()
             h_s = ''

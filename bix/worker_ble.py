@@ -251,13 +251,33 @@ class WorkerBle(QRunnable):
         rv, v = await cmd_gin()
         if rv:
             # try to get it traditional way
-            # glt,mac,sn,gfv,sts,_,_,bat,_,_,_
-            # todo: fix this
-            s = 'my_glt,my_mac,my_sn,my_gfv,sts,_,_,0001,_,_,_'
+            rv, glt = await cmd_glt()
+            if rv:
+                self._ser('glt while gin')
+                return
+            rv, mac = await cmd_mac()
+            if rv:
+                self._ser('mac while gin')
+                return
+            rn, d = await cmd_rli()
+            if rv:
+                self._ser('rli while gin')
+                return
+            sn = 'N/A'
+            if 'SN' in d.keys():
+                sn = d['SN']
+            rv, gfv = await cmd_gfv()
+            if rv:
+                self._ser('gfv while gin')
+                return
+            rv, sts = await cmd_sts()
+            if rv:
+                self._ser('sts while gin')
+                return
+            s = f'{glt},{mac},{sn},{gfv},{sts},,,,,'
             self.signals.done.emit()
             self.signals.cmd_get_info.emit(s)
             return
-        print('GIN rv, v', rv, v)
         self.signals.done.emit()
         self.signals.cmd_get_info.emit(v.decode())
 
@@ -324,14 +344,15 @@ class WorkerBle(QRunnable):
             self._ser('not connected while sensors')
             return
 
-        if await self._bad_we_are_running('sensors'):
-            return
-
         rv, v = await cmd_bat()
         if rv:
             self._ser('bat while sensors')
             return
-        d['bat'] = v
+
+        if await self._bad_we_are_running('sensors'):
+            # at least send the battery
+            self.signals.bat.emit(v)
+            return
 
         rv, g_glt = await cmd_glt()
         if rv:
