@@ -242,19 +242,19 @@ class WorkerBle(QRunnable):
         self.signals.result.emit(f'GCI = {i} ms')
 
 
-    async def wb_inf(self):
+    async def wb_gin(self):
 
         if not is_connected():
             self._ser('not connected, info')
             return
 
-        rv, v = await cmd_inf()
+        rv, v = await cmd_gin()
         if rv:
-            self._ser('inf')
+            self._ser('gin')
             return
-        print('INF rv, v', rv, v)
+        print('GIN rv, v', rv, v)
         self.signals.done.emit()
-        self.signals.inf.emit(v.decode())
+        self.signals.cmd_get_info.emit(v.decode())
 
 
     async def wb_osc(self):
@@ -504,7 +504,7 @@ class WorkerBle(QRunnable):
             'wb_mux': self.wb_mux,
             'wb_osc': self.wb_osc,
             'wb_gci': self.wb_gci,
-            'wb_inf': self.wb_inf,
+            'wb_gin': self.wb_gin,
         }
         self.ls_fn = []
         if type(ls_gui_cmd) is str:

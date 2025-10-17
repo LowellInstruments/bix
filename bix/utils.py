@@ -59,7 +59,7 @@ class WorkerSignals(QObject):
     download = pyqtSignal(str)
     result = pyqtSignal(str)
     gui_status = pyqtSignal(str)
-    inf = pyqtSignal(str)
+    cmd_get_info = pyqtSignal(str)
 
 
 
