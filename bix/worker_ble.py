@@ -255,7 +255,7 @@ class WorkerBle(QRunnable):
             # todo: fix this
             s = 'my_glt,my_mac,my_sn,my_gfv,sts,_,_,0001,_,_,_'
             self.signals.done.emit()
-            self.signals.cmd_get_info.emit(v.decode())
+            self.signals.cmd_get_info.emit(s)
             return
         print('GIN rv, v', rv, v)
         self.signals.done.emit()
