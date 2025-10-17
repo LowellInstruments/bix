@@ -330,7 +330,6 @@ class WorkerBle(QRunnable):
 
     async def wb_sensors(self):
         d = {
-            'bat': '',
             'gst': '',
             'gsp': '',
             'gsc': '',
@@ -344,21 +343,14 @@ class WorkerBle(QRunnable):
             self._ser('not connected while sensors')
             return
 
-        rv, v = await cmd_bat()
-        if rv:
-            self._ser('bat while sensors')
-            return
-
         if await self._bad_we_are_running('sensors'):
-            # at least send the battery
-            self.signals.bat.emit(v)
             return
 
         rv, g_glt = await cmd_glt()
         if rv:
             self._ser('glt')
             return
-        d['glt'] = v
+        d['glt'] = g_glt
 
         if g_glt in ('TDO', 'CTD'):
             rv, v = await cmd_gst()
@@ -388,7 +380,6 @@ class WorkerBle(QRunnable):
 
         if g_glt == 'CTD':
             rv, v = await cmd_gsc()
-            print('** gsc', v)
             if rv:
                 self._ser('gsc')
                 return
@@ -418,6 +409,19 @@ class WorkerBle(QRunnable):
             return
         self.signals.gcc.emit(s)
         self.signals.done.emit()
+
+
+    async def wb_bat(self):
+        if not is_connected():
+            self._ser('not connected while BAT')
+            return
+        rv, v = await cmd_bat()
+        if rv:
+            self._ser('bat')
+            return
+        self.signals.bat.emit(v)
+        self.signals.done.emit()
+
 
 
     async def wb_gcf(self):
@@ -511,6 +515,7 @@ class WorkerBle(QRunnable):
         d = {
             'wb_connect': self.wb_connect,
             'wb_disconnect': self.wb_disconnect,
+            'wb_bat': self.wb_bat,
             'wb_sensors': self.wb_sensors,
             'wb_run': self.wb_run,
             'wb_stop': self.wb_stp,

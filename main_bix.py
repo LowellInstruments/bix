@@ -343,22 +343,6 @@ class Bix(QMainWindow, Ui_MainWindow):
 
 
 
-        # these values match DDH
-        v = d['bat']
-        if glt == 'TDO':
-            v /= .5454
-        if glt == 'CTD':
-            v /= .5454
-        if glt.startswith('DO'):
-            v /= .4545
-
-        v = int(v)
-        s = f'{v} mV'
-        self.lbl_bat.setText(s)
-        print(f'BAT {s}')
-
-
-
     # -------------------
     # GUI button clicks
     # -------------------
@@ -420,6 +404,7 @@ class Bix(QMainWindow, Ui_MainWindow):
         self.lbl_connecting.setText(f'connecting {self.mac} {h_s}')
         self.wrk([
             'wb_connect',
+            'wb_bat',
             'wb_gin',
             'wb_sensors',
             'wb_gcc'],
